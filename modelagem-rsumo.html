@@ -1,0 +1,4003 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗄️ SGBD Relacional & Modelagem de Dados - Guia Completo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  
+  :root {
+    --bg-primary: #0f0c29;
+    --bg-secondary: #1a1a2e;
+    --bg-card: rgba(255,255,255,0.06);
+    --accent-blue: #4facfe;
+    --accent-cyan: #00f2fe;
+    --accent-pink: #f093fb;
+    --accent-red: #f5576c;
+    --accent-green: #00ff88;
+    --accent-orange: #ffa500;
+    --text-primary: #fff;
+    --text-secondary: #ddd;
+    --text-muted: #999;
+    --border: rgba(255,255,255,0.1);
+  }
+  
+  body.light-mode {
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(0,0,0,0.03);
+    --text-primary: #1a1a2e;
+    --text-secondary: #333;
+    --text-muted: #666;
+    --border: rgba(0,0,0,0.1);
+  }
+  
+  body {
+    background: linear-gradient(135deg, var(--bg-primary), #302b63, #24243e);
+    min-height: 100vh;
+    color: var(--text-primary);
+    padding: 20px;
+    transition: background 0.5s;
+  }
+  
+  body.light-mode {
+    background: linear-gradient(135deg, #f5f7fa, #e8ecf3, #dfe6f0);
+  }
+  
+  .container { max-width: 1400px; margin: 0 auto; }
+  
+  header {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  
+  header h1 {
+    font-size: 2.8em;
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-red), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+    animation: gradientShift 5s ease infinite;
+    background-size: 200% auto;
+  }
+  
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  
+  header p { color: var(--text-secondary); font-size: 1.1em; }
+  
+  .header-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .control-btn {
+    padding: 10px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9em;
+  }
+  
+  .control-btn:hover {
+    background: var(--accent-blue);
+    transform: translateY(-2px);
+  }
+  
+  .progress-container { margin-top: 25px; }
+  
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+    transition: width 0.5s ease;
+    border-radius: 10px;
+    position: relative;
+  }
+  
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-blue);
+  }
+  
+  .stat-card .number {
+    font-size: 2em;
+    font-weight: bold;
+    color: var(--accent-blue);
+  }
+  
+  .stat-card .label {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .sidebar {
+    flex: 0 0 260px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+  
+  .sidebar h3 {
+    color: var(--accent-blue);
+    margin-bottom: 15px;
+    font-size: 1.1em;
+  }
+  
+  .nav-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .nav-item {
+    padding: 10px 15px;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    border-left: 3px solid transparent;
+  }
+  
+  .nav-item:hover {
+    background: rgba(79, 172, 254, 0.1);
+    border-left-color: var(--accent-blue);
+  }
+  
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(240,147,251,0.2), rgba(245,87,108,0.1));
+    border-left-color: var(--accent-pink);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  
+  .nav-item .emoji { margin-right: 8px; }
+  
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  @media (max-width: 900px) {
+    .content-wrapper { flex-direction: column; }
+    .sidebar { position: static; flex: 1; max-height: none; }
+  }
+  
+  .content-section {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+  
+  .content-section.active { display: block; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .card {
+    background: var(--bg-card);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+  }
+  
+  .card:hover { border-color: rgba(79, 172, 254, 0.3); }
+  
+  .card h2 {
+    color: var(--accent-blue);
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 15px;
+  }
+  
+  .card h3 {
+    color: var(--accent-pink);
+    margin: 25px 0 15px;
+    font-size: 1.3em;
+  }
+  
+  .card h4 {
+    color: var(--accent-cyan);
+    margin: 20px 0 10px;
+    font-size: 1.1em;
+  }
+  
+  .card p, .card li {
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+  
+  .card ul, .card ol { padding-left: 25px; }
+  
+  .command-box {
+    background: #1a1a2e;
+    border-left: 4px solid var(--accent-blue);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-family: 'Courier New', monospace;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .command-box:hover {
+    background: #252542;
+    border-left-color: var(--accent-cyan);
+    transform: translateX(5px);
+  }
+  
+  .command-box code {
+    color: var(--accent-cyan);
+    font-size: 0.95em;
+    flex: 1;
+    white-space: pre-wrap;
+  }
+  
+  .command-box .copy-icon {
+    color: var(--text-muted);
+    font-size: 0.85em;
+    transition: all 0.3s;
+  }
+  
+  .command-box.copied { border-left-color: var(--accent-green); }
+  .command-box.copied .copy-icon { color: var(--accent-green); }
+  
+  .command-explanation {
+    background: rgba(79, 172, 254, 0.05);
+    border-left: 3px solid var(--accent-blue);
+    padding: 10px 15px;
+    margin: 5px 0 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+  }
+  
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+  }
+  
+  .concept-item {
+    background: rgba(79, 172, 254, 0.08);
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  
+  .concept-item:hover {
+    background: rgba(79, 172, 254, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(79, 172, 254, 0.2);
+  }
+  
+  .concept-item .icon { font-size: 2em; margin-bottom: 10px; }
+  
+  .concept-item strong {
+    color: var(--accent-blue);
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+  }
+  
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(245,87,108,0.1), rgba(240,147,251,0.1));
+    border: 1px solid rgba(245,87,108,0.4);
+    padding: 18px 22px;
+    border-radius: 12px;
+    margin: 15px 0;
+  }
+  
+  .highlight-box strong { color: var(--accent-red); }
+  
+  .tip-box {
+    background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,242,254,0.05));
+    border: 1px solid rgba(0,255,136,0.4);
+    padding: 18px 22px;
+    border-radius: 12px;
+    margin: 15px 0;
+  }
+  
+  .tip-box strong { color: var(--accent-green); }
+  
+  .warning-box {
+    background: linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,152,0,0.05));
+    border: 1px solid rgba(255,193,7,0.4);
+    padding: 18px 22px;
+    border-radius: 12px;
+    margin: 15px 0;
+  }
+  
+  .warning-box strong { color: #ffc107; }
+  
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .comparison-table th, .comparison-table td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .comparison-table th {
+    background: rgba(79,172,254,0.2);
+    color: var(--accent-blue);
+    font-weight: 600;
+  }
+  
+  .comparison-table tr:hover { background: rgba(255,255,255,0.03); }
+  
+  .accordion { margin: 15px 0; }
+  
+  .accordion-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  
+  .accordion-header {
+    padding: 15px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  
+  .accordion-header:hover { background: rgba(79, 172, 254, 0.1); }
+  
+  .accordion-header .arrow {
+    transition: transform 0.3s;
+    color: var(--accent-blue);
+  }
+  
+  .accordion-item.active .accordion-header .arrow { transform: rotate(180deg); }
+  
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    padding: 0 20px;
+  }
+  
+  .accordion-item.active .accordion-content {
+    max-height: 2000px;
+    padding: 0 20px 20px;
+  }
+  
+  /* ER DIAGRAM */
+  .er-diagram {
+    background: rgba(0,0,0,0.3);
+    border-radius: 15px;
+    padding: 30px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  
+  .er-entity {
+    background: linear-gradient(135deg, rgba(79,172,254,0.2), rgba(0,242,254,0.1));
+    border: 2px solid var(--accent-blue);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    min-width: 200px;
+    display: inline-block;
+    transition: all 0.3s;
+  }
+  
+  .er-entity:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(79,172,254,0.3);
+  }
+  
+  .er-entity-name {
+    background: var(--accent-blue);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .er-attribute {
+    padding: 5px 10px;
+    margin: 3px 0;
+    background: rgba(0,0,0,0.3);
+    border-radius: 5px;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .er-attribute .key-icon {
+    color: var(--accent-orange);
+    font-size: 0.9em;
+  }
+  
+  .er-attribute .fk-icon {
+    color: var(--accent-pink);
+    font-size: 0.9em;
+  }
+  
+  .er-relationship {
+    background: linear-gradient(135deg, rgba(240,147,251,0.2), rgba(245,87,108,0.1));
+    border: 2px dashed var(--accent-pink);
+    border-radius: 50%;
+    padding: 15px 25px;
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+    font-weight: bold;
+    color: var(--accent-pink);
+  }
+  
+  /* TABLE VISUAL */
+  .table-visual {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+    border: 1px solid var(--border);
+  }
+  
+  .table-header {
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+    padding: 12px 20px;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .table-row {
+    display: grid;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .table-row.header {
+    background: rgba(79,172,254,0.15);
+    font-weight: bold;
+    color: var(--accent-blue);
+  }
+  
+  .table-row > div {
+    padding: 10px 15px;
+    border-right: 1px solid var(--border);
+  }
+  
+  .table-row > div:last-child { border-right: none; }
+  
+  .table-row:hover:not(.header) { background: rgba(255,255,255,0.03); }
+  
+  /* NORMALIZATION VISUAL */
+  .normalization-step {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    transition: all 0.3s;
+  }
+  
+  .normalization-step:hover {
+    border-color: var(--accent-blue);
+    transform: translateX(5px);
+  }
+  
+  .normalization-step .step-number {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  /* SQL SIMULATOR */
+  .sql-simulator {
+    background: #0d0d0d;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0;
+    border: 1px solid #333;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  
+  .sql-header {
+    background: #2d2d2d;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .sql-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  
+  .sql-dot.red { background: #ff5f56; }
+  .sql-dot.yellow { background: #ffbd2e; }
+  .sql-dot.green { background: #27c93f; }
+  
+  .sql-title {
+    color: #888;
+    font-size: 0.85em;
+    margin-left: 10px;
+    font-family: monospace;
+  }
+  
+  .sql-body {
+    padding: 20px;
+    font-family: 'Courier New', monospace;
+    color: #00ff88;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 0.9em;
+    line-height: 1.6;
+  }
+  
+  .sql-line {
+    margin-bottom: 5px;
+    animation: typeIn 0.3s ease;
+  }
+  
+  @keyframes typeIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  .sql-line .prompt { color: var(--accent-blue); }
+  .sql-line .output { color: #ddd; }
+  .sql-line .error { color: var(--accent-red); }
+  .sql-line .keyword { color: var(--accent-pink); font-weight: bold; }
+  .sql-line .string { color: var(--accent-orange); }
+  .sql-line .number { color: var(--accent-cyan); }
+  
+  .sql-input-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-top: 1px solid #333;
+  }
+  
+  .sql-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #00ff88;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    outline: none;
+  }
+  
+  .sql-suggestions {
+    padding: 10px;
+    background: #1a1a1a;
+    border-top: 1px solid #333;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .suggestion-btn {
+    padding: 5px 12px;
+    background: rgba(79, 172, 254, 0.1);
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    border-radius: 15px;
+    color: var(--accent-blue);
+    font-family: monospace;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .suggestion-btn:hover {
+    background: rgba(79, 172, 254, 0.3);
+    transform: scale(1.05);
+  }
+  
+  /* FLASHCARDS */
+  .flashcards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+  }
+  
+  .flashcard {
+    perspective: 1000px;
+    height: 200px;
+    cursor: pointer;
+  }
+  
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+  
+  .flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  
+  .flashcard-front {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: white;
+  }
+  
+  .flashcard-back {
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-red));
+    color: white;
+    transform: rotateY(180deg);
+  }
+  
+  .flashcard-front .emoji { font-size: 2em; margin-bottom: 10px; }
+  .flashcard-front h4 { font-size: 1.2em; margin-bottom: 10px; }
+  .flashcard-front p { font-size: 0.85em; opacity: 0.9; }
+  .flashcard-back p { font-size: 0.95em; line-height: 1.5; }
+  
+  /* QUIZ */
+  .quiz-container {
+    background: var(--bg-card);
+    border-radius: 15px;
+    padding: 30px;
+    border: 1px solid var(--border);
+  }
+  
+  .quiz-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .quiz-tab {
+    padding: 10px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-secondary);
+  }
+  
+  .quiz-tab.active {
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-red));
+    color: white;
+    border-color: transparent;
+  }
+  
+  .quiz-category { display: none; }
+  .quiz-category.active { display: block; }
+  
+  .question {
+    margin-bottom: 25px;
+    padding: 25px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    border-left: 4px solid var(--accent-blue);
+  }
+  
+  .question h4 {
+    color: var(--accent-pink);
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    line-height: 1.6;
+  }
+  
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  
+  .option {
+    padding: 14px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-secondary);
+  }
+  
+  .option:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--accent-blue);
+    transform: translateX(5px);
+  }
+  
+  .option.correct {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+  }
+  
+  .option.wrong {
+    background: rgba(255, 87, 108, 0.2);
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+  }
+  
+  .feedback {
+    margin-top: 12px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    display: none;
+    font-size: 0.9em;
+    line-height: 1.6;
+  }
+  
+  .feedback.show { display: block; animation: fadeIn 0.3s; }
+  .feedback.success { background: rgba(0,255,136,0.1); color: var(--accent-green); border-left: 3px solid var(--accent-green); }
+  .feedback.error { background: rgba(255,87,108,0.1); color: var(--accent-red); border-left: 3px solid var(--accent-red); }
+  
+  .essay-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+  }
+  
+  .essay-box textarea {
+    width: 100%;
+    min-height: 120px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text-primary);
+    font-family: inherit;
+    resize: vertical;
+    font-size: 0.95em;
+  }
+  
+  .essay-box textarea:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+  }
+  
+  .show-answer {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: rgba(79,172,254,0.2);
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .show-answer:hover { background: rgba(79,172,254,0.3); }
+  
+  .answer-content {
+    display: none;
+    margin-top: 10px;
+    padding: 15px;
+    background: rgba(0,255,136,0.05);
+    border-left: 3px solid var(--accent-green);
+    border-radius: 5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  
+  .answer-content.show { display: block; animation: fadeIn 0.3s; }
+  
+  .score-box {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(79,172,254,0.2), rgba(240,147,251,0.2));
+    border-radius: 15px;
+    margin-top: 25px;
+    border: 1px solid var(--border);
+  }
+  
+  .score-box h3 { font-size: 2.5em; color: var(--accent-blue); margin-bottom: 10px; }
+  
+  .btn {
+    padding: 12px 30px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+    border: none;
+    border-radius: 30px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 15px;
+    font-size: 1em;
+  }
+  
+  .btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(79,172,254,0.4); }
+  
+  .badges-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+  }
+  
+  .badge {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+    opacity: 0.4;
+    filter: grayscale(100%);
+  }
+  
+  .badge.earned {
+    opacity: 1;
+    filter: grayscale(0%);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 20px rgba(0,255,136,0.3);
+    animation: badgePulse 2s infinite;
+  }
+  
+  @keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,255,136,0.3); }
+    50% { box-shadow: 0 0 30px rgba(0,255,136,0.6); }
+  }
+  
+  .badge .emoji { font-size: 2.5em; margin-bottom: 10px; }
+  .badge .name { font-size: 0.85em; color: var(--text-secondary); }
+  
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+    margin: 20px 0;
+  }
+  
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent-blue), var(--accent-pink));
+  }
+  
+  .timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border-left: 3px solid var(--accent-blue);
+    transition: all 0.3s;
+  }
+  
+  .timeline-item:hover {
+    transform: translateX(5px);
+    background: rgba(79, 172, 254, 0.08);
+  }
+  
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -32px;
+    top: 25px;
+    width: 16px;
+    height: 16px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--accent-blue);
+  }
+  
+  .timeline-item h4 {
+    color: var(--accent-blue);
+    margin-bottom: 8px;
+  }
+  
+  .cheatsheet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+  }
+  
+  .cheatsheet-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    transition: all 0.3s;
+  }
+  
+  .cheatsheet-item:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-3px);
+  }
+  
+  .cheatsheet-item .cmd {
+    font-family: monospace;
+    color: var(--accent-cyan);
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    white-space: pre-wrap;
+  }
+  
+  .cheatsheet-item .desc {
+    color: var(--text-muted);
+    font-size: 0.85em;
+  }
+  
+  .glossary-search {
+    width: 100%;
+    padding: 12px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    font-size: 1em;
+  }
+  
+  .glossary-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+  }
+  
+  .glossary-item:hover { border-color: var(--accent-blue); }
+  
+  .glossary-item .term {
+    color: var(--accent-blue);
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+  }
+  
+  .glossary-item .definition {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(240,147,251,0.2);
+    border: 1px solid var(--accent-pink);
+    border-radius: 20px;
+    font-size: 0.8em;
+    margin: 3px;
+    color: var(--accent-pink);
+    transition: all 0.3s;
+  }
+  
+  .tag:hover {
+    transform: scale(1.1);
+    background: rgba(240,147,251,0.3);
+  }
+  
+  .comparison-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  
+  @media (max-width: 700px) {
+    .comparison-cards { grid-template-columns: 1fr; }
+  }
+  
+  .comparison-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 15px;
+    padding: 20px;
+    transition: all 0.3s;
+  }
+  
+  .comparison-card:hover { transform: translateY(-5px); }
+  
+  .comparison-card.sql-card { border-color: rgba(0,242,254,0.5); }
+  .comparison-card.mysql-card { border-color: rgba(240,147,251,0.5); }
+  
+  .comparison-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .comparison-card ul { list-style: none; padding: 0; }
+  .comparison-card li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  
+  .comparison-card li:last-child { border-bottom: none; }
+  
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--accent-blue);
+    border-radius: 5px;
+  }
+  
+  .hidden { display: none !important; }
+  
+  @media (max-width: 768px) {
+    header h1 { font-size: 2em; }
+    .card { padding: 20px; }
+    .card h2 { font-size: 1.4em; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <header>
+    <h1>🗄️ SGBD Relacional & Modelagem de Dados</h1>
+    <p>Curso Interativo Completo — Técnico em Desenvolvimento de Sistemas</p>
+    <p style="margin-top:5px; font-size:0.9em; color:var(--accent-pink);">Banco de Dados Relacional, Normalização, SQL e MySQL</p>
+    
+    <div class="header-controls">
+      <button class="control-btn" onclick="toggleTheme()">🌓 Modo</button>
+      <button class="control-btn" onclick="exportProgress()">📊 Progresso</button>
+    </div>
+    
+    <div class="progress-container">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <p style="margin-top:10px; font-size:0.9em;">Progresso de estudo: <span id="progressText">0%</span> — <span id="sectionsVisited">0</span>/23 seções visitadas</p>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="number" id="statCommands">0</div>
+        <div class="label">Comandos copiados</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="statQuiz">0</div>
+        <div class="label">Questões corretas</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="statBadges">0</div>
+        <div class="label">Conquistas</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="statTime">0</div>
+        <div class="label">Minutos estudando</div>
+      </div>
+    </div>
+  </header>
+  
+  <div class="content-wrapper">
+    
+    <aside class="sidebar">
+      <h3>📚 Navegação</h3>
+      <ul class="nav-list" id="navList">
+        <li class="nav-item active" onclick="showSection(0, this)"><span class="emoji">🏠</span>Início</li>
+        <li class="nav-item" onclick="showSection(1, this)"><span class="emoji">🗄️</span>O que é SGBD</li>
+        <li class="nav-item" onclick="showSection(2, this)"><span class="emoji">📊</span>Tabelas e Registros</li>
+        <li class="nav-item" onclick="showSection(3, this)"><span class="emoji">🔗</span>Diagrama ER</li>
+        <li class="nav-item" onclick="showSection(4, this)"><span class="emoji">📦</span>Entidades e Atributos</li>
+        <li class="nav-item" onclick="showSection(5, this)"><span class="emoji">🔀</span>Relacionamentos</li>
+        <li class="nav-item" onclick="showSection(6, this)"><span class="emoji">🔑</span>Chave Primária</li>
+        <li class="nav-item" onclick="showSection(7, this)"><span class="emoji">🌐</span>Chave Estrangeira</li>
+        <li class="nav-item" onclick="showSection(8, this)"><span class="emoji">🛡️</span>Integridade Referencial</li>
+        <li class="nav-item" onclick="showSection(9, this)"><span class="emoji">📐</span>Normalização - Intro</li>
+        <li class="nav-item" onclick="showSection(10, this)"><span class="emoji">1️⃣</span>1ª Forma Normal</li>
+        <li class="nav-item" onclick="showSection(11, this)"><span class="emoji">2️⃣</span>2ª Forma Normal</li>
+        <li class="nav-item" onclick="showSection(12, this)"><span class="emoji">3️⃣</span>3ª Forma Normal</li>
+        <li class="nav-item" onclick="showSection(13, this)"><span class="emoji">🔍</span>SQL - SELECT</li>
+        <li class="nav-item" onclick="showSection(14, this)"><span class="emoji">➕</span>SQL - INSERT</li>
+        <li class="nav-item" onclick="showSection(15, this)"><span class="emoji">✏️</span>SQL - UPDATE</li>
+        <li class="nav-item" onclick="showSection(16, this)"><span class="emoji">🗑️</span>SQL - DELETE</li>
+        <li class="nav-item" onclick="showSection(17, this)"><span class="emoji">🔗</span>SQL - JOIN</li>
+        <li class="nav-item" onclick="showSection(18, this)"><span class="emoji">💻</span>Simulador SQL</li>
+        <li class="nav-item" onclick="showSection(19, this)"><span class="emoji">🎴</span>Flashcards</li>
+        <li class="nav-item" onclick="showSection(20, this)"><span class="emoji">📖</span>Glossário</li>
+        <li class="nav-item" onclick="showSection(21, this)"><span class="emoji">⚡</span>Cheatsheet SQL</li>
+        <li class="nav-item" onclick="showSection(22, this)"><span class="emoji">🎯</span>Quiz Completo</li>
+      </ul>
+      
+      <h3 style="margin-top:25px;">🏆 Conquistas</h3>
+      <div class="badges-container" id="badgesContainer">
+        <div class="badge" id="badge-first"><div class="emoji">🌱</div><div class="name">Iniciante</div></div>
+        <div class="badge" id="badge-explorer"><div class="emoji">🧭</div><div class="name">Explorador</div></div>
+        <div class="badge" id="badge-commander"><div class="emoji">⌨️</div><div class="name">SQL Master</div></div>
+        <div class="badge" id="badge-master"><div class="emoji">🎓</div><div class="name">DBA</div></div>
+      </div>
+    </aside>
+    
+    <main class="main-content">
+      
+      <!-- SEÇÃO 0: INÍCIO -->
+      <div class="content-section active">
+        <div class="card">
+          <h2>🏠 Bem-vindo ao Curso de SGBD Relacional</h2>
+          <p style="font-size:1.1em; line-height:1.8;">
+            Este é um <strong>guia completo e interativo</strong> sobre Banco de Dados Relacional. 
+            Aqui você vai aprender desde os conceitos fundamentais até SQL avançado, passando por modelagem ER, 
+            normalização e muito mais!
+          </p>
+          
+          <h3>🎯 O que você vai aprender</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🗄️</div>
+              <strong>Fundamentos</strong>
+              O que é SGBD, tabelas, registros e campos
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔗</div>
+              <strong>Modelagem ER</strong>
+              Entidades, atributos e relacionamentos
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔑</div>
+              <strong>Chaves</strong>
+              Primárias, estrangeiras e integridade
+            </div>
+            <div class="concept-item">
+              <div class="icon">📐</div>
+              <strong>Normalização</strong>
+              1FN, 2FN e 3FN para dados otimizados
+            </div>
+            <div class="concept-item">
+              <div class="icon">💾</div>
+              <strong>SQL</strong>
+              SELECT, INSERT, UPDATE, DELETE e JOIN
+            </div>
+            <div class="concept-item">
+              <div class="icon">🎯</div>
+              <strong>Prática</strong>
+              Simulador SQL e exercícios práticos
+            </div>
+          </div>
+          
+          <h3>💡 Por que aprender Banco de Dados?</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">💼</div>
+              <strong>Mercado de Trabalho</strong>
+              Essencial para desenvolvedores, analistas e DBAs
+            </div>
+            <div class="concept-item">
+              <div class="icon">🌐</div>
+              <strong>Base de Tudo</strong>
+              Todo sistema moderno usa banco de dados
+            </div>
+            <div class="concept-item">
+              <div class="icon">📊</div>
+              <strong>Organização</strong>
+              Dados estruturados e consistentes
+            </div>
+            <div class="concept-item">
+              <div class="icon">⚡</div>
+              <strong>Performance</strong>
+              Consultas rápidas e eficientes
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica:</strong> Este guia é progressivo. Comece pela seção 1 e avance na ordem. Cada seção constrói sobre a anterior!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 1: O QUE É SGBD -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🗄️ O que é SGBD Relacional?</h2>
+          <p>Antes de tudo, vamos entender o básico: o que é um banco de dados e o que é um SGBD?</p>
+          
+          <h3>📚 Conceitos Fundamentais</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">📦</div>
+              <strong>Banco de Dados</strong>
+              Coleção organizada de dados armazenados eletronicamente
+            </div>
+            <div class="concept-item">
+              <div class="icon">🖥️</div>
+              <strong>SGBD</strong>
+              Sistema Gerenciador de Banco de Dados — o software que gerencia o banco
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔗</div>
+              <strong>Relacional</strong>
+              Dados organizados em tabelas com relações entre elas
+            </div>
+          </div>
+          
+          <h3>💡 Analogia para Fixar</h3>
+          <div class="highlight-box">
+            <strong>📚 Pense assim:</strong>
+            <ul style="margin-top:10px;">
+              <li><strong>Banco de Dados</strong> = Uma biblioteca (onde os livros ficam guardados)</li>
+              <li><strong>SGBD</strong> = O bibliotecário (organiza, busca e cuida dos livros)</li>
+              <li><strong>Tabelas</strong> = As estantes da biblioteca</li>
+              <li><strong>Registros</strong> = Os livros em cada estante</li>
+            </ul>
+          </div>
+          
+          <h3>🏆 Vantagens dos SGBDs Relacionais</h3>
+          <div class="comparison-cards">
+            <div class="comparison-card sql-card">
+              <h3>✅ Vantagens</h3>
+              <ul>
+                <li>✅ Integridade dos dados</li>
+                <li>✅ Consistência transacional</li>
+                <li>✅ Estrutura organizada</li>
+                <li>✅ Relacionamentos claros</li>
+                <li>✅ Linguagem SQL padronizada</li>
+                <li>✅ Segurança e backups</li>
+              </ul>
+            </div>
+            <div class="comparison-card mysql-card">
+              <h3>🎯 Casos de Uso</h3>
+              <ul>
+                <li>🏦 Sistemas bancários</li>
+                <li>🛒 E-commerces</li>
+                <li>🏥 Sistemas hospitalares</li>
+                <li>🎓 Sistemas acadêmicos</li>
+                <li>🏢 ERPs corporativos</li>
+                <li>📊 Relatórios empresariais</li>
+              </ul>
+            </div>
+          </div>
+          
+          <h3>🛠️ SGBDs Relacionais Populares</h3>
+          <table class="comparison-table">
+            <tr><th>SGBD</th><th>Características</th><th>Uso</th></tr>
+            <tr><td><strong>MySQL</strong></td><td>Open-source, rápido, popular</td><td>Web, aplicações gerais</td></tr>
+            <tr><td><strong>PostgreSQL</strong></td><td>Robusto, recursos avançados</td><td>Enterprise, dados complexos</td></tr>
+            <tr><td><strong>Oracle</strong></td><td>Corporativo, muito poderoso</td><td>Grandes empresas</td></tr>
+            <tr><td><strong>SQL Server</strong></td><td>Microsoft, integração Windows</td><td>Ambientes Microsoft</td></tr>
+            <tr><td><strong>SQLite</strong></td><td>Leve, embutido</td><td>Apps mobile, pequenos sistemas</td></tr>
+          </table>
+          
+          <div class="tip-box">
+            <strong>💡 Neste curso:</strong> Vamos focar no <strong>MySQL</strong>, um dos SGBDs mais usados no mundo, especialmente em aplicações web!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 2: TABELAS E REGISTROS -->
+      <div class="content-section">
+        <div class="card">
+          <h2>📊 Tabelas e Registros</h2>
+          <p>No banco de dados relacional, os dados são organizados em <strong>tabelas</strong>. Vamos entender a estrutura!</p>
+          
+          <h3>📐 Estrutura de uma Tabela</h3>
+          <p>Uma tabela é composta por:</p>
+          <ul>
+            <li><strong>Colunas (campos/atributos)</strong> — Definem o tipo de dado (nome, idade, email)</li>
+            <li><strong>Linhas (registros/tuplas)</strong> — São os dados em si (João, 25, joao@email.com)</li>
+          </ul>
+          
+          <h3>📋 Exemplo Prático: Tabela de Clientes</h3>
+          <div class="table-visual">
+            <div class="table-header">📋 tabela: clientes</div>
+            <div class="table-row header" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div>id</div>
+              <div>nome</div>
+              <div>idade</div>
+              <div>email</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div>1</div>
+              <div>João Silva</div>
+              <div>25</div>
+              <div>joao@email.com</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div>2</div>
+              <div>Maria Santos</div>
+              <div>32</div>
+              <div>maria@email.com</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div>3</div>
+              <div>Pedro Costa</div>
+              <div>28</div>
+              <div>pedro@email.com</div>
+            </div>
+          </div>
+          
+          <h3>🔑 Tipos de Dados Comuns</h3>
+          <table class="comparison-table">
+            <tr><th>Tipo</th><th>Descrição</th><th>Exemplo</th></tr>
+            <tr><td><code>INT</code></td><td>Número inteiro</td><td>25, 100, -5</td></tr>
+            <tr><td><code>VARCHAR(n)</code></td><td>Texto com tamanho máximo</td><td>'João', 'email@teste.com'</td></tr>
+            <tr><td><code>TEXT</code></td><td>Texto longo</td><td>Descrições, comentários</td></tr>
+            <tr><td><code>DATE</code></td><td>Data</td><td>2024-01-15</td></tr>
+            <tr><td><code>DATETIME</code></td><td>Data e hora</td><td>2024-01-15 14:30:00</td></tr>
+            <tr><td><code>DECIMAL(p,s)</code></td><td>Número decimal</td><td>19.99, 1500.50</td></tr>
+            <tr><td><code>BOOLEAN</code></td><td>Verdadeiro ou falso</td><td>TRUE, FALSE</td></tr>
+          </table>
+          
+          <h3>📝 Criando uma Tabela em SQL</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>CREATE TABLE clientes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    idade INT,
+    email VARCHAR(150) UNIQUE
+);</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Cria uma tabela chamada "clientes" com 4 colunas</div>
+          
+          <h3>🎯 Restrições (Constraints)</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🔑</div>
+              <strong>PRIMARY KEY</strong>
+              Identificador único de cada registro
+            </div>
+            <div class="concept-item">
+              <div class="icon">🚫</div>
+              <strong>NOT NULL</strong>
+              Campo obrigatório (não pode ser vazio)
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔒</div>
+              <strong>UNIQUE</strong>
+              Valor não pode se repetir
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔢</div>
+              <strong>AUTO_INCREMENT</strong>
+              Numeração automática
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Regra importante:</strong> Cada linha (registro) em uma tabela deve ser <strong>única</strong>. É por isso que usamos a chave primária!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 3: DIAGRAMA ER -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🔗 Diagrama Entidade-Relacionamento (ER)</h2>
+          <p>O diagrama ER é uma representação visual da estrutura do banco de dados. É o "mapa" que mostra como os dados se relacionam!</p>
+          
+          <h3>🎯 O que é um Diagrama ER?</h3>
+          <p>É um desenho que representa:</p>
+          <ul>
+            <li><strong>Entidades</strong> — Os "objetos" do sistema (clientes, produtos, pedidos)</li>
+            <li><strong>Atributos</strong> — As características de cada entidade</li>
+            <li><strong>Relacionamentos</strong> — Como as entidades se conectam</li>
+          </ul>
+          
+          <h3>📊 Exemplo: Sistema de E-commerce</h3>
+          <div class="er-diagram">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-around; align-items:center; gap:20px;">
+              
+              <div class="er-entity">
+                <div class="er-entity-name">CLIENTE</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_cliente</div>
+                <div class="er-attribute">nome</div>
+                <div class="er-attribute">email</div>
+                <div class="er-attribute">telefone</div>
+              </div>
+              
+              <div class="er-relationship">
+                faz<br>1:N
+              </div>
+              
+              <div class="er-entity">
+                <div class="er-entity-name">PEDIDO</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_pedido</div>
+                <div class="er-attribute"><span class="fk-icon">🌐</span> id_cliente</div>
+                <div class="er-attribute">data</div>
+                <div class="er-attribute">valor_total</div>
+              </div>
+              
+            </div>
+            
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-around; align-items:center; gap:20px; margin-top:30px;">
+              
+              <div class="er-entity">
+                <div class="er-entity-name">PRODUTO</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_produto</div>
+                <div class="er-attribute">nome</div>
+                <div class="er-attribute">preco</div>
+                <div class="er-attribute">estoque</div>
+              </div>
+              
+              <div class="er-relationship">
+                contém<br>N:M
+              </div>
+              
+              <div class="er-entity">
+                <div class="er-entity-name">ITEM_PEDIDO</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_item</div>
+                <div class="er-attribute"><span class="fk-icon">🌐</span> id_pedido</div>
+                <div class="er-attribute"><span class="fk-icon">🌐</span> id_produto</div>
+                <div class="er-attribute">quantidade</div>
+              </div>
+              
+            </div>
+          </div>
+          
+          <h3>🎨 Simbologia do Diagrama ER</h3>
+          <table class="comparison-table">
+            <tr><th>Elemento</th><th>Representação</th><th>Exemplo</th></tr>
+            <tr><td><strong>Entidade</strong></td><td>Retângulo</td><td>CLIENTE, PRODUTO</td></tr>
+            <tr><td><strong>Atributo</strong></td><td>Elipse ou lista</td><td>nome, email, preço</td></tr>
+            <tr><td><strong>Chave Primária</strong></td><td>Sublinhado</td><td><u>id_cliente</u></td></tr>
+            <tr><td><strong>Relacionamento</strong></td><td>Losango</td><td>"faz", "contém"</td></tr>
+            <tr><td><strong>Cardinalidade</strong></td><td>Número ao lado</td><td>1:1, 1:N, N:M</td></tr>
+          </table>
+          
+          <h3>💡 Por que usar Diagrama ER?</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🗺️</div>
+              <strong>Visualização</strong>
+              Facilita entender a estrutura do banco
+            </div>
+            <div class="concept-item">
+              <div class="icon">👥</div>
+              <strong>Comunicação</strong>
+              Todos entendem o mesmo diagrama
+            </div>
+            <div class="concept-item">
+              <div class="icon">📐</div>
+              <strong>Planejamento</strong>
+              Antes de criar, planeje a estrutura
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔍</div>
+              <strong>Documentação</strong>
+              Registro oficial do sistema
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Ferramentas para criar diagramas ER:</strong>
+            <ul style="margin-top:8px;">
+              <li>draw.io (gratuito, online)</li>
+              <li>Lucidchart</li>
+              <li>MySQL Workbench</li>
+              <li>dbdiagram.io</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 4: ENTIDADES E ATRIBUTOS -->
+      <div class="content-section">
+        <div class="card">
+          <h2>📦 Entidades e Atributos</h2>
+          <p>Vamos aprofundar nos dois elementos mais importantes do diagrama ER!</p>
+          
+          <h3>🏢 O que é uma Entidade?</h3>
+          <p>Uma <strong>entidade</strong> representa algo do mundo real que queremos armazenar no banco de dados. Pode ser:</p>
+          <ul>
+            <li><strong>Tangível:</strong> Cliente, Produto, Pedido, Funcionário</li>
+            <li><strong>Intangível:</strong> Conta bancária, Curso, Matrícula</li>
+          </ul>
+          
+          <div class="highlight-box">
+            <strong>🎯 Como identificar entidades?</strong>
+            <p style="margin-top:10px;">Pergunte: "O que meu sistema precisa armazenar?" Cada resposta é uma entidade potencial!</p>
+          </div>
+          
+          <h3>🏷️ O que são Atributos?</h3>
+          <p>Atributos são as <strong>características</strong> ou <strong>propriedades</strong> de uma entidade.</p>
+          
+          <h3>📋 Exemplo: Entidade CLIENTE</h3>
+          <div class="er-entity" style="display:block; max-width:400px;">
+            <div class="er-entity-name">CLIENTE</div>
+            <div class="er-attribute"><span class="key-icon">🔑</span> <strong>id_cliente</strong> (chave primária)</div>
+            <div class="er-attribute">nome_completo</div>
+            <div class="er-attribute">cpf</div>
+            <div class="er-attribute">email</div>
+            <div class="er-attribute">telefone</div>
+            <div class="er-attribute">data_nascimento</div>
+            <div class="er-attribute">endereco</div>
+          </div>
+          
+          <h3>🎨 Tipos de Atributos</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🔑</div>
+              <strong>Chave Primária</strong>
+              Identifica unicamente o registro (sublinhado)
+            </div>
+            <div class="concept-item">
+              <div class="icon">📝</div>
+              <strong>Simples</strong>
+              Não pode ser dividido (nome, CPF)
+            </div>
+            <div class="concept-item">
+              <div class="icon">📦</div>
+              <strong>Composto</strong>
+              Pode ser dividido (endereço = rua + número + cidade)
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔢</div>
+              <strong>Multivalorado</strong>
+              Pode ter vários valores (telefones)
+            </div>
+            <div class="concept-item">
+              <div class="icon">⭕</div>
+              <strong>Derivado</strong>
+              Calculado de outro (idade a partir da data de nascimento)
+            </div>
+            <div class="concept-item">
+              <div class="icon">❓</div>
+              <strong>Nulo (NULL)</strong>
+              Pode não ter valor (complemento do endereço)
+            </div>
+          </div>
+          
+          <h3>🎯 Identificando Entidades em um Caso Real</h3>
+          <p><strong>Caso: TechSolutions - Empresa de TI</strong></p>
+          <div class="timeline">
+            <div class="timeline-item">
+              <h4>🏢 Entidades identificadas</h4>
+              <ul>
+                <li><strong>CLIENTE</strong> — Quem contrata os serviços</li>
+                <li><strong>FORNECEDOR</strong> — Quem fornece produtos</li>
+                <li><strong>PRODUTO</strong> — O que é vendido</li>
+                <li><strong>VENDA</strong> — Transações realizadas</li>
+                <li><strong>FUNCIONÁRIO</strong> — Quem trabalha na empresa</li>
+              </ul>
+            </div>
+            <div class="timeline-item">
+              <h4>📋 Atributos de cada entidade</h4>
+              <p>Cada entidade tem seus próprios atributos específicos. Por exemplo, CLIENTE tem nome, CPF, email; PRODUTO tem nome, preço, estoque.</p>
+            </div>
+          </div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Cuidado:</strong> Nem tudo que parece entidade é! "Endereço" pode ser um atributo de CLIENTE ou uma entidade separada, dependendo do contexto.
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 5: RELACIONAMENTOS -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🔀 Relacionamentos entre Entidades</h2>
+          <p>As entidades não existem isoladas — elas se conectam! Esses conectores são os <strong>relacionamentos</strong>.</p>
+          
+          <h3>🔗 O que é um Relacionamento?</h3>
+          <p>É uma <strong>associação</strong> entre duas ou mais entidades. Representa como os dados se conectam no mundo real.</p>
+          
+          <h3>📊 Tipos de Cardinalidade</h3>
+          <p>A cardinalidade indica <strong>quantas instâncias</strong> de uma entidade podem se relacionar com outra.</p>
+          
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">1️⃣</div>
+              <strong>1:1 (Um para Um)</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Um registro de A se relaciona com apenas um de B.</p>
+              <p style="font-size:0.85em; color:var(--text-muted);">Ex: Pessoa ↔ CPF</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔀</div>
+              <strong>1:N (Um para Muitos)</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Um registro de A se relaciona com vários de B.</p>
+              <p style="font-size:0.85em; color:var(--text-muted);">Ex: Cliente ↔ Pedidos</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🌐</div>
+              <strong>N:M (Muitos para Muitos)</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Vários registros de A se relacionam com vários de B.</p>
+              <p style="font-size:0.85em; color:var(--text-muted);">Ex: Alunos ↔ Disciplinas</p>
+            </div>
+          </div>
+          
+          <h3>📋 Exemplos Práticos</h3>
+          
+          <h4>🔹 Relacionamento 1:1</h4>
+          <div class="highlight-box">
+            <strong>Exemplo:</strong> Um USUÁRIO tem apenas um PERFIL, e um PERFIL pertence a apenas um USUÁRIO.
+          </div>
+          
+          <h4>🔹 Relacionamento 1:N (mais comum!)</h4>
+          <div class="highlight-box">
+            <strong>Exemplo:</strong> Um CLIENTE pode fazer vários PEDIDOS, mas cada PEDIDO é de apenas um CLIENTE.
+          </div>
+          <div class="er-diagram" style="padding:20px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap;">
+              <div class="er-entity" style="margin:0;">
+                <div class="er-entity-name">CLIENTE</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_cliente</div>
+                <div class="er-attribute">nome</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:2em; color:var(--accent-pink);">⟶</div>
+                <div style="color:var(--accent-pink); font-weight:bold;">1 : N</div>
+              </div>
+              <div class="er-entity" style="margin:0;">
+                <div class="er-entity-name">PEDIDO</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_pedido</div>
+                <div class="er-attribute"><span class="fk-icon">🌐</span> id_cliente</div>
+              </div>
+            </div>
+          </div>
+          
+          <h4>🔹 Relacionamento N:M</h4>
+          <div class="highlight-box">
+            <strong>Exemplo:</strong> Um ALUNO cursa várias DISCIPLINAS, e uma DISCIPLINA tem vários ALUNOS.
+            <p style="margin-top:10px;"><strong>⚠️ Atenção:</strong> Relacionamentos N:M precisam de uma <strong>tabela intermediária</strong> no banco!</p>
+          </div>
+          
+          <h3>📐 Tabela Intermediária</h3>
+          <p>Quando temos um relacionamento N:M, criamos uma terceira tabela para "quebrar" o relacionamento em dois 1:N.</p>
+          
+          <div class="er-diagram">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; flex-wrap:wrap;">
+              <div class="er-entity" style="margin:0;">
+                <div class="er-entity-name">ALUNO</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_aluno</div>
+                <div class="er-attribute">nome</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="color:var(--accent-pink); font-weight:bold;">1 : N</div>
+              </div>
+              <div class="er-entity" style="margin:0; border-color:var(--accent-green);">
+                <div class="er-entity-name" style="background:var(--accent-green); color:#000;">MATRICULA</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_matricula</div>
+                <div class="er-attribute"><span class="fk-icon">🌐</span> id_aluno</div>
+                <div class="er-attribute"><span class="fk-icon">🌐</span> id_disciplina</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="color:var(--accent-pink); font-weight:bold;">N : 1</div>
+              </div>
+              <div class="er-entity" style="margin:0;">
+                <div class="er-entity-name">DISCIPLINA</div>
+                <div class="er-attribute"><span class="key-icon">🔑</span> id_disciplina</div>
+                <div class="er-attribute">nome</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Regra de ouro:</strong> Na implementação física, <strong>só existem relacionamentos 1:N</strong>. Relacionamentos N:M são sempre convertidos em dois 1:N com uma tabela intermediária!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 6: CHAVE PRIMÁRIA -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🔑 Chave Primária (Primary Key)</h2>
+          <p>A chave primária é um dos conceitos mais importantes do banco de dados relacional!</p>
+          
+          <h3>🎯 O que é uma Chave Primária?</h3>
+          <p>É um campo (ou conjunto de campos) que <strong>identifica unicamente</strong> cada registro em uma tabela.</p>
+          
+          <div class="highlight-box">
+            <strong>🎯 Características da Chave Primária:</strong>
+            <ul style="margin-top:10px;">
+              <li>✅ <strong>Única</strong> — Não pode haver dois registros com a mesma PK</li>
+              <li>✅ <strong>Não nula</strong> — Todo registro deve ter uma PK (NOT NULL)</li>
+              <li>✅ <strong>Imutável</strong> — Idealmente, não deve mudar</li>
+              <li>✅ <strong>Mínima</strong> — Usar o menor número possível de campos</li>
+            </ul>
+          </div>
+          
+          <h3>📋 Exemplo Prático</h3>
+          <div class="table-visual">
+            <div class="table-header">📋 tabela: clientes</div>
+            <div class="table-row header" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div style="color:var(--accent-orange);">🔑 id (PK)</div>
+              <div>nome</div>
+              <div>cpf</div>
+              <div>email</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div style="color:var(--accent-orange);">1</div>
+              <div>João Silva</div>
+              <div>123.456.789-00</div>
+              <div>joao@email.com</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 1fr 1fr 1.5fr;">
+              <div style="color:var(--accent-orange);">2</div>
+              <div>Maria Santos</div>
+              <div>987.654.321-00</div>
+              <div>maria@email.com</div>
+            </div>
+          </div>
+          
+          <h3>🔢 Tipos de Chave Primária</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🔢</div>
+              <strong>Surrogate (Artificial)</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Criada pelo sistema (id auto-incremento)</p>
+              <p style="font-size:0.85em; color:var(--text-muted);">Ex: id INT AUTO_INCREMENT</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🆔</div>
+              <strong>Natural</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Usa um dado real do negócio</p>
+              <p style="font-size:0.85em; color:var(--text-muted);">Ex: CPF, email, código do produto</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔗</div>
+              <strong>Composta</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Combinação de 2 ou mais campos</p>
+              <p style="font-size:0.85em; color:var(--text-muted);">Ex: (id_pedido, id_produto)</p>
+            </div>
+          </div>
+          
+          <h3>💻 Criando Chave Primária em SQL</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>-- Chave primária simples com auto-incremento
+CREATE TABLE clientes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(150)
+);</code><span class="copy-icon">📋</span></div>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>-- Chave primária composta
+CREATE TABLE itens_pedido (
+    id_pedido INT,
+    id_produto INT,
+    quantidade INT,
+    PRIMARY KEY (id_pedido, id_produto)
+);</code><span class="copy-icon">📋</span></div>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>-- Adicionando PK em tabela existente
+ALTER TABLE clientes ADD PRIMARY KEY (id);</code><span class="copy-icon">📋</span></div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Recomendação:</strong> Use sempre uma <strong>chave surrogate</strong> (id auto-incremento) como PK. É mais simples, eficiente e evita problemas com mudanças de dados do negócio.
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 7: CHAVE ESTRANGEIRA -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🌐 Chave Estrangeira (Foreign Key)</h2>
+          <p>A chave estrangeira é o que <strong>conecta</strong> as tabelas, criando os relacionamentos!</p>
+          
+          <h3>🎯 O que é uma Chave Estrangeira?</h3>
+          <p>É um campo em uma tabela que <strong>aponta para a chave primária</strong> de outra tabela. Ela cria o relacionamento entre as duas.</p>
+          
+          <div class="highlight-box">
+            <strong>🎯 Função da FK:</strong>
+            <ul style="margin-top:10px;">
+              <li>🔗 <strong>Conectar tabelas</strong> — Cria o relacionamento</li>
+              <li>🛡️ <strong>Garantir integridade</strong> — Só aceita valores válidos</li>
+              <li>📊 <strong>Permitir JOINs</strong> — Consultas entre tabelas</li>
+            </ul>
+          </div>
+          
+          <h3>📋 Exemplo Prático</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:20px 0;">
+            <div class="table-visual">
+              <div class="table-header">📋 clientes</div>
+              <div class="table-row header" style="grid-template-columns: 60px 1fr;">
+                <div style="color:var(--accent-orange);">🔑 id</div>
+                <div>nome</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 1fr;">
+                <div style="color:var(--accent-orange);">1</div>
+                <div>João</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 1fr;">
+                <div style="color:var(--accent-orange);">2</div>
+                <div>Maria</div>
+              </div>
+            </div>
+            <div class="table-visual">
+              <div class="table-header">📋 pedidos</div>
+              <div class="table-row header" style="grid-template-columns: 60px 1fr 1fr;">
+                <div>🔑 id</div>
+                <div style="color:var(--accent-pink);">🌐 id_cliente (FK)</div>
+                <div>valor</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 1fr 1fr;">
+                <div>1</div>
+                <div style="color:var(--accent-pink);">1</div>
+                <div>R$ 100</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 1fr 1fr;">
+                <div>2</div>
+                <div style="color:var(--accent-pink);">2</div>
+                <div>R$ 250</div>
+              </div>
+            </div>
+          </div>
+          <p style="text-align:center; color:var(--text-muted);">👆 O campo <code>id_cliente</code> na tabela <code>pedidos</code> é uma FK que referencia <code>id</code> de <code>clientes</code></p>
+          
+          <h3>💻 Criando Chave Estrangeira em SQL</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>CREATE TABLE pedidos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_cliente INT,
+    data_pedido DATE,
+    valor_total DECIMAL(10,2),
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id)
+);</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Cria a tabela pedidos com FK apontando para clientes</div>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>-- Adicionando FK em tabela existente
+ALTER TABLE pedidos
+ADD FOREIGN KEY (id_cliente) REFERENCES clientes(id);</code><span class="copy-icon">📋</span></div>
+          
+          <h3>🛡️ Ações em Cascata</h3>
+          <p>O que acontece quando o registro referenciado é alterado ou excluído?</p>
+          <table class="comparison-table">
+            <tr><th>Ação</th><th>Comportamento</th><th>Exemplo</th></tr>
+            <tr>
+              <td><code>CASCADE</code></td>
+              <td>Aplica a mesma ação</td>
+              <td>Se deleta cliente, deleta pedidos</td>
+            </tr>
+            <tr>
+              <td><code>SET NULL</code></td>
+              <td>Coloca NULL na FK</td>
+              <td>Se deleta cliente, pedido fica sem cliente</td>
+            </tr>
+            <tr>
+              <td><code>RESTRICT</code></td>
+              <td>Bloqueia a ação (padrão)</td>
+              <td>Não deixa deletar cliente com pedidos</td>
+            </tr>
+            <tr>
+              <td><code>NO ACTION</code></td>
+              <td>Semelhante ao RESTRICT</td>
+              <td>Não permite ação</td>
+            </tr>
+          </table>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>FOREIGN KEY (id_cliente) REFERENCES clientes(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE</code><span class="copy-icon">📋</span></div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica:</strong> Use <code>CASCADE</code> com cuidado! Pode apagar muitos dados sem querer. Em muitos casos, <code>RESTRICT</code> é mais seguro.
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 8: INTEGRIDADE REFERENCIAL -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🛡️ Integridade Referencial</h2>
+          <p>A integridade referencial garante que os relacionamentos entre tabelas sejam <strong>consistentes</strong>.</p>
+          
+          <h3>🎯 O que é Integridade Referencial?</h3>
+          <p>É a garantia de que <strong>não existem registros órfãos</strong> — ou seja, toda FK deve apontar para um registro existente na tabela referenciada.</p>
+          
+          <div class="highlight-box">
+            <strong>🛡️ Exemplo:</strong>
+            <p style="margin-top:10px;">Se um PEDIDO tem <code>id_cliente = 5</code>, <strong>DEVE existir</strong> um cliente com id=5 na tabela clientes. Não pode existir pedido sem cliente!</p>
+          </div>
+          
+          <h3>📊 Benefícios</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">✅</div>
+              <strong>Consistência</strong>
+              Dados sempre válidos e coerentes
+            </div>
+            <div class="concept-item">
+              <div class="icon">🛡️</div>
+              <strong>Segurança</strong>
+              Evita dados órfãos e inválidos
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔒</div>
+              <strong>Confiabilidade</strong>
+              Pode confiar nos relacionamentos
+            </div>
+            <div class="concept-item">
+              <div class="icon">⚡</div>
+              <strong>Performance</strong>
+              Consultas JOIN mais eficientes
+            </div>
+          </div>
+          
+          <h3>🔄 Regras ao Atualizar ou Excluir</h3>
+          <div class="accordion">
+            <div class="accordion-item">
+              <div class="accordion-header" onclick="toggleAccordion(this)">
+                <span>🗑️ Ao EXCLUIR um registro referenciado</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="accordion-content">
+                <p>O que acontece com os registros que apontam para ele?</p>
+                <ul style="margin-top:10px;">
+                  <li><strong>RESTRICT</strong> (padrão): Bloqueia a exclusão</li>
+                  <li><strong>CASCADE</strong>: Exclui também os registros relacionados</li>
+                  <li><strong>SET NULL</strong>: Coloca NULL nas FKs relacionadas</li>
+                </ul>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-header" onclick="toggleAccordion(this)">
+                <span>✏️ Ao ATUALIZAR a PK referenciada</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="accordion-content">
+                <p>O que acontece com as FKs que apontam para ela?</p>
+                <ul style="margin-top:10px;">
+                  <li><strong>RESTRICT</strong> (padrão): Bloqueia a atualização</li>
+                  <li><strong>CASCADE</strong>: Atualiza também as FKs</li>
+                  <li><strong>SET NULL</strong>: Coloca NULL nas FKs</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <h3>💻 Exemplo Completo</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>CREATE TABLE pedidos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    data_pedido DATE,
+    valor_total DECIMAL(10,2),
+    FOREIGN KEY (id_cliente) 
+        REFERENCES clientes(id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">
+            • Se tentar deletar cliente com pedidos → ERRO<br>
+            • Se mudar id do cliente → pedidos são atualizados automaticamente
+          </div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Cuidado com CASCADE!</strong>
+            <p style="margin-top:10px;">Usar CASCADE pode apagar muitos dados sem querer. Em sistemas reais, prefira RESTRICT e faça exclusões lógicas (soft delete) quando possível.</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 9: NORMALIZAÇÃO INTRO -->
+      <div class="content-section">
+        <div class="card">
+          <h2>📐 Normalização de Banco de Dados</h2>
+          <p>A normalização é o processo de <strong>organizar os dados</strong> para evitar redundâncias e inconsistências.</p>
+          
+          <h3>🎯 O que é Normalização?</h3>
+          <p>É um conjunto de regras que ajudam a estruturar o banco de dados de forma eficiente, eliminando:</p>
+          <ul>
+            <li>❌ <strong>Redundância</strong> — Dados repetidos</li>
+            <li>❌ <strong>Anomalias</strong> — Problemas ao inserir, atualizar ou excluir</li>
+            <li>❌ <strong>Inconsistências</strong> — Dados conflitantes</li>
+          </ul>
+          
+          <h3>🚫 Problemas sem Normalização</h3>
+          <div class="table-visual">
+            <div class="table-header">❌ Tabela NÃO normalizada: vendas</div>
+            <div class="table-row header" style="grid-template-columns: 60px 1fr 1fr 1fr 1fr;">
+              <div>id_venda</div>
+              <div>cliente</div>
+              <div>cidade_cliente</div>
+              <div>produto</div>
+              <div>valor</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr 1fr 1fr 1fr;">
+              <div>1</div>
+              <div>João</div>
+              <div>São Paulo</div>
+              <div>Notebook</div>
+              <div>3000</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr 1fr 1fr 1fr;">
+              <div>2</div>
+              <div>João</div>
+              <div>São Paulo</div>
+              <div>Mouse</div>
+              <div>50</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr 1fr 1fr 1fr;">
+              <div>3</div>
+              <div>Maria</div>
+              <div>Rio de Janeiro</div>
+              <div>Notebook</div>
+              <div>3000</div>
+            </div>
+          </div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Problemas identificados:</strong>
+            <ul style="margin-top:10px;">
+              <li>🔴 <strong>Redundância:</strong> "João" e "São Paulo" aparecem várias vezes</li>
+              <li>🔴 <strong>Anomalia de atualização:</strong> Se João mudar de cidade, precisa atualizar várias linhas</li>
+              <li>🔴 <strong>Anomalia de exclusão:</strong> Se apagar venda 1, perde dados de João</li>
+              <li>🔴 <strong>Anomalia de inserção:</strong> Não pode cadastrar cliente sem venda</li>
+            </ul>
+          </div>
+          
+          <h3>📊 As Formas Normais</h3>
+          <p>Existem várias "formas normais" (FN), cada uma com regras específicas:</p>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">1️⃣</div>
+              <strong>1FN</strong>
+              Atomicidade — valores atômicos
+            </div>
+            <div class="concept-item">
+              <div class="icon">2️⃣</div>
+              <strong>2FN</strong>
+              Elimina dependências parciais
+            </div>
+            <div class="concept-item">
+              <div class="icon">3️⃣</div>
+              <strong>3FN</strong>
+              Elimina dependências transitivas
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔟</div>
+              <strong>FNBC</strong>
+              Forma Normal de Boyce-Codd (avançada)
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Regra prática:</strong> Na maioria dos sistemas, chegar à <strong>3FN</strong> é suficiente. Formas mais avançadas são usadas em casos específicos.
+          </div>
+          
+          <h3>🎯 Benefícios da Normalização</h3>
+          <ul>
+            <li>✅ Menos espaço em disco (sem redundância)</li>
+            <li>✅ Atualizações mais rápidas (menos dados)</li>
+            <li>✅ Consistência garantida</li>
+            <li>✅ Mais flexibilidade para mudanças</li>
+            <li>✅ Facilidade de manutenção</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 10: 1FN -->
+      <div class="content-section">
+        <div class="card">
+          <h2>1️⃣ Primeira Forma Normal (1FN)</h2>
+          <p>A 1FN é o primeiro passo da normalização. Ela garante que todos os valores sejam <strong>atômicos</strong>.</p>
+          
+          <h3>🎯 Regra da 1FN</h3>
+          <div class="highlight-box">
+            <strong>📐 Regra:</strong> Todos os atributos devem conter <strong>apenas um valor por célula</strong> (valor atômico). Não pode haver grupos de atributos repetidos ou listas.
+          </div>
+          
+          <h3>❌ Exemplo em 1FN (ERRADO)</h3>
+          <div class="table-visual">
+            <div class="table-header">❌ tabela: clientes (NÃO está em 1FN)</div>
+            <div class="table-row header" style="grid-template-columns: 60px 1fr 1.5fr;">
+              <div>id</div>
+              <div>nome</div>
+              <div>telefones</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr 1.5fr;">
+              <div>1</div>
+              <div>João</div>
+              <div style="color:var(--accent-red);">1199999-8888, 1188888-7777</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr 1.5fr;">
+              <div>2</div>
+              <div>Maria</div>
+              <div style="color:var(--accent-red);">2199999-6666</div>
+            </div>
+          </div>
+          <p style="color:var(--accent-red);">❌ Problema: A coluna "telefones" tem múltiplos valores em uma célula!</p>
+          
+          <h3>✅ Exemplo em 1FN (CORRETO)</h3>
+          <div class="table-visual">
+            <div class="table-header">✅ tabela: clientes (EM 1FN)</div>
+            <div class="table-row header" style="grid-template-columns: 60px 1fr;">
+              <div>id</div>
+              <div>nome</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr;">
+              <div>1</div>
+              <div>João</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 1fr;">
+              <div>2</div>
+              <div>Maria</div>
+            </div>
+          </div>
+          <div class="table-visual">
+            <div class="table-header">✅ tabela: telefones (EM 1FN)</div>
+            <div class="table-row header" style="grid-template-columns: 60px 80px 1fr;">
+              <div>id</div>
+              <div>id_cliente</div>
+              <div>telefone</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 80px 1fr;">
+              <div>1</div>
+              <div>1</div>
+              <div>1199999-8888</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 80px 1fr;">
+              <div>2</div>
+              <div>1</div>
+              <div>1188888-7777</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 80px 1fr;">
+              <div>3</div>
+              <div>2</div>
+              <div>2199999-6666</div>
+            </div>
+          </div>
+          
+          <h3>🛠️ Como Aplicar a 1FN</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <h4>1️⃣ Identificar atributos multivalorados</h4>
+              <p>Procure campos com listas ou múltiplos valores (telefones, emails, endereços)</p>
+            </div>
+            <div class="timeline-item">
+              <h4>2️⃣ Criar nova tabela</h4>
+              <p>Para cada atributo multivalorado, crie uma tabela separada</p>
+            </div>
+            <div class="timeline-item">
+              <h4>3️⃣ Adicionar FK</h4>
+              <p>Na nova tabela, adicione uma FK apontando para a tabela original</p>
+            </div>
+            <div class="timeline-item">
+              <h4>4️⃣ Verificar atomicidade</h4>
+              <p>Garanta que cada célula tem apenas um valor</p>
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica:</strong> A 1FN é o mínimo necessário para um banco relacional. Se sua tabela não está em 1FN, ela não é verdadeiramente relacional!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 11: 2FN -->
+      <div class="content-section">
+        <div class="card">
+          <h2>2️⃣ Segunda Forma Normal (2FN)</h2>
+          <p>A 2FN elimina <strong>dependências parciais</strong> — quando um atributo depende apenas de parte da chave primária.</p>
+          
+          <h3>🎯 Regra da 2FN</h3>
+          <div class="highlight-box">
+            <strong>📐 Regra:</strong> Estar em 1FN + todos os atributos não-chave devem depender <strong>completamente</strong> da chave primária inteira.
+          </div>
+          
+          <h3>🔑 Quando se aplica?</h3>
+          <p>A 2FN só faz sentido quando a chave primária é <strong>composta</strong> (tem mais de um campo).</p>
+          
+          <h3>❌ Exemplo NÃO está em 2FN</h3>
+          <div class="table-visual">
+            <div class="table-header">❌ tabela: itens_pedido (composta, NÃO está em 2FN)</div>
+            <div class="table-row header" style="grid-template-columns: 80px 80px 1fr 1fr 1fr;">
+              <div style="color:var(--accent-orange);">🔑 id_pedido</div>
+              <div style="color:var(--accent-orange);">🔑 id_produto</div>
+              <div>quantidade</div>
+              <div>nome_produto</div>
+              <div>preco_produto</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 80px 1fr 1fr 1fr;">
+              <div>1</div>
+              <div>10</div>
+              <div>2</div>
+              <div>Notebook</div>
+              <div>3000</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 80px 80px 1fr 1fr 1fr;">
+              <div>1</div>
+              <div>20</div>
+              <div>1</div>
+              <div>Mouse</div>
+              <div>50</div>
+            </div>
+          </div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Problema:</strong>
+            <ul style="margin-top:10px;">
+              <li><code>quantidade</code> depende de AMBAS as chaves (pedido + produto) ✅</li>
+              <li><code>nome_produto</code> depende APENAS de <code>id_produto</code> ❌ (dependência parcial!)</li>
+              <li><code>preco_produto</code> depende APENAS de <code>id_produto</code> ❌ (dependência parcial!)</li>
+            </ul>
+          </div>
+          
+          <h3>✅ Aplicando a 2FN</h3>
+          <p>Separamos os atributos que dependem apenas de parte da chave em tabelas próprias:</p>
+          
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin:20px 0;">
+            <div class="table-visual">
+              <div class="table-header">✅ itens_pedido</div>
+              <div class="table-row header" style="grid-template-columns: 80px 80px 80px;">
+                <div style="color:var(--accent-orange);">🔑 id_pedido</div>
+                <div style="color:var(--accent-orange);">🔑 id_produto</div>
+                <div>quantidade</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 80px 80px 80px;">
+                <div>1</div>
+                <div>10</div>
+                <div>2</div>
+              </div>
+            </div>
+            <div class="table-visual">
+              <div class="table-header">✅ produtos</div>
+              <div class="table-row header" style="grid-template-columns: 60px 1fr 80px;">
+                <div style="color:var(--accent-orange);">🔑 id</div>
+                <div>nome</div>
+                <div>preco</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 1fr 80px;">
+                <div>10</div>
+                <div>Notebook</div>
+                <div>3000</div>
+              </div>
+            </div>
+          </div>
+          
+          <h3>🛠️ Como Aplicar a 2FN</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <h4>1️⃣ Verificar se está em 1FN</h4>
+              <p>Primeiro passo: garantir atomicidade</p>
+            </div>
+            <div class="timeline-item">
+              <h4>2️⃣ Identificar chave primária composta</h4>
+              <p>A 2FN só se aplica quando a PK tem mais de um campo</p>
+            </div>
+            <div class="timeline-item">
+              <h4>3️⃣ Encontrar dependências parciais</h4>
+              <p>Atributos que dependem apenas de parte da PK</p>
+            </div>
+            <div class="timeline-item">
+              <h4>4️⃣ Criar novas tabelas</h4>
+              <p>Mover atributos com dependência parcial para tabelas próprias</p>
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica:</strong> Se a chave primária é simples (um único campo), a tabela já está automaticamente em 2FN!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 12: 3FN -->
+      <div class="content-section">
+        <div class="card">
+          <h2>3️⃣ Terceira Forma Normal (3FN)</h2>
+          <p>A 3FN elimina <strong>dependências transitivas</strong> — quando um atributo depende de outro atributo que não é chave.</p>
+          
+          <h3>🎯 Regra da 3FN</h3>
+          <div class="highlight-box">
+            <strong>📐 Regra:</strong> Estar em 2FN + nenhum atributo não-chave pode depender de outro atributo não-chave. Todos devem depender <strong>diretamente</strong> da chave primária.
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Lema da 3FN:</strong> "Cada atributo deve depender da chave, de toda a chave, e de nada mais além da chave."
+          </div>
+          
+          <h3>❌ Exemplo NÃO está em 3FN</h3>
+          <div class="table-visual">
+            <div class="table-header">❌ tabela: pedidos (NÃO está em 3FN)</div>
+            <div class="table-row header" style="grid-template-columns: 60px 80px 1fr 1fr 1fr;">
+              <div style="color:var(--accent-orange);">🔑 id_pedido</div>
+              <div>🌐 id_cliente</div>
+              <div>nome_cliente</div>
+              <div>cidade_cliente</div>
+              <div>valor</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 80px 1fr 1fr 1fr;">
+              <div>1</div>
+              <div>10</div>
+              <div>João</div>
+              <div>São Paulo</div>
+              <div>100</div>
+            </div>
+            <div class="table-row" style="grid-template-columns: 60px 80px 1fr 1fr 1fr;">
+              <div>2</div>
+              <div>10</div>
+              <div>João</div>
+              <div>São Paulo</div>
+              <div>250</div>
+            </div>
+          </div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Problema:</strong>
+            <ul style="margin-top:10px;">
+              <li><code>nome_cliente</code> depende de <code>id_cliente</code>, não de <code>id_pedido</code> ❌</li>
+              <li><code>cidade_cliente</code> depende de <code>id_cliente</code>, não de <code>id_pedido</code> ❌</li>
+              <li>Isso é uma <strong>dependência transitiva</strong>: id_pedido → id_cliente → nome_cliente</li>
+            </ul>
+          </div>
+          
+          <h3>✅ Aplicando a 3FN</h3>
+          <p>Removemos os atributos que dependem de outros atributos não-chave:</p>
+          
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin:20px 0;">
+            <div class="table-visual">
+              <div class="table-header">✅ pedidos</div>
+              <div class="table-row header" style="grid-template-columns: 60px 80px 80px;">
+                <div style="color:var(--accent-orange);">🔑 id_pedido</div>
+                <div>🌐 id_cliente</div>
+                <div>valor</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 80px 80px;">
+                <div>1</div>
+                <div>10</div>
+                <div>100</div>
+              </div>
+            </div>
+            <div class="table-visual">
+              <div class="table-header">✅ clientes</div>
+              <div class="table-row header" style="grid-template-columns: 60px 1fr 1fr;">
+                <div style="color:var(--accent-orange);">🔑 id</div>
+                <div>nome</div>
+                <div>cidade</div>
+              </div>
+              <div class="table-row" style="grid-template-columns: 60px 1fr 1fr;">
+                <div>10</div>
+                <div>João</div>
+                <div>São Paulo</div>
+              </div>
+            </div>
+          </div>
+          
+          <h3>🛠️ Como Aplicar a 3FN</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <h4>1️⃣ Verificar se está em 2FN</h4>
+              <p>Primeiro passo obrigatório</p>
+            </div>
+            <div class="timeline-item">
+              <h4>2️⃣ Identificar dependências transitivas</h4>
+              <p>Atributos que dependem de outros atributos não-chave</p>
+            </div>
+            <div class="timeline-item">
+              <h4>3️⃣ Criar novas tabelas</h4>
+              <p>Mover atributos dependentes para tabelas próprias</p>
+            </div>
+            <div class="timeline-item">
+              <h4>4️⃣ Criar FKs</h4>
+              <p>Manter relacionamento entre as tabelas</p>
+            </div>
+          </div>
+          
+          <h3>📊 Comparação: Antes e Depois</h3>
+          <table class="comparison-table">
+            <tr><th>Antes (não normalizado)</th><th>Depois (3FN)</th></tr>
+            <tr>
+              <td>Uma tabela gigante com tudo</td>
+              <td>Várias tabelas menores e relacionadas</td>
+            </tr>
+            <tr>
+              <td>Dados repetidos várias vezes</td>
+              <td>Dados armazenados uma única vez</td>
+            </tr>
+            <tr>
+              <td>Difícil de atualizar</td>
+              <td>Fácil de manter consistente</td>
+            </tr>
+            <tr>
+              <td>Gasta mais espaço</td>
+              <td>Economiza espaço</td>
+            </tr>
+          </table>
+          
+          <div class="tip-box">
+            <strong>💡 Conclusão:</strong> A 3FN é o ponto ideal para a maioria dos sistemas. Elimina redundâncias sem complicar demais as consultas!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 13: SQL SELECT -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🔍 SQL - SELECT (Consultar)</h2>
+          <p>O comando <code>SELECT</code> é o mais usado no SQL! Serve para <strong>consultar</strong> dados do banco.</p>
+          
+          <h3>📐 Sintaxe Básica</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT colunas
+FROM tabela
+WHERE condição
+ORDER BY coluna
+LIMIT quantidade;</code><span class="copy-icon">📋</span></div>
+          
+          <h3>📋 Exemplos Práticos</h3>
+          
+          <h4>🔹 Selecionar todas as colunas</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT * FROM clientes;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Retorna todos os dados de todos os clientes</div>
+          
+          <h4>🔹 Selecionar colunas específicas</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT nome, email FROM clientes;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Retorna apenas nome e email dos clientes</div>
+          
+          <h4>🔹 Filtrar com WHERE</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT * FROM clientes WHERE cidade = 'São Paulo';</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Retorna apenas clientes de São Paulo</div>
+          
+          <h4>🔹 Ordenar resultados</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT * FROM clientes ORDER BY nome ASC;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Ordena por nome em ordem alfabética</div>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT * FROM produtos ORDER BY preco DESC;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Ordena por preço do maior para o menor</div>
+          
+          <h4>🔹 Limitar resultados</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT * FROM clientes LIMIT 10;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Retorna apenas os 10 primeiros clientes</div>
+          
+          <h3>🎯 Operadores no WHERE</h3>
+          <table class="comparison-table">
+            <tr><th>Operador</th><th>Descrição</th><th>Exemplo</th></tr>
+            <tr><td><code>=</code></td><td>Igual</td><td>WHERE idade = 25</td></tr>
+            <tr><td><code>&lt;&gt;</code> ou <code>!=</code></td><td>Diferente</td><td>WHERE cidade &lt;&gt; 'SP'</td></tr>
+            <tr><td><code>&gt;</code>, <code>&lt;</code></td><td>Maior, menor</td><td>WHERE preco &gt; 100</td></tr>
+            <tr><td><code>&gt;=</code>, <code>&lt;=</code></td><td>Maior/menor igual</td><td>WHERE idade &gt;= 18</td></tr>
+            <tr><td><code>AND</code></td><td>E lógico</td><td>WHERE idade &gt; 18 AND cidade = 'SP'</td></tr>
+            <tr><td><code>OR</code></td><td>Ou lógico</td><td>WHERE cidade = 'SP' OR cidade = 'RJ'</td></tr>
+            <tr><td><code>IN</code></td><td>Em uma lista</td><td>WHERE cidade IN ('SP', 'RJ', 'MG')</td></tr>
+            <tr><td><code>LIKE</code></td><td>Padrão de texto</td><td>WHERE nome LIKE 'Jo%'</td></tr>
+            <tr><td><code>BETWEEN</code></td><td>Entre valores</td><td>WHERE preco BETWEEN 10 AND 100</td></tr>
+          </table>
+          
+          <h3>📊 Funções de Agregação</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🔢</div>
+              <strong>COUNT()</strong>
+              Conta registros
+              <p style="margin-top:5px; font-size:0.85em;"><code>SELECT COUNT(*) FROM clientes;</code></p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">➕</div>
+              <strong>SUM()</strong>
+              Soma valores
+              <p style="margin-top:5px; font-size:0.85em;"><code>SELECT SUM(preco) FROM produtos;</code></p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">📊</div>
+              <strong>AVG()</strong>
+              Média
+              <p style="margin-top:5px; font-size:0.85em;"><code>SELECT AVG(idade) FROM clientes;</code></p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">📈</div>
+              <strong>MAX() / MIN()</strong>
+              Maior / Menor
+              <p style="margin-top:5px; font-size:0.85em;"><code>SELECT MAX(preco) FROM produtos;</code></p>
+            </div>
+          </div>
+          
+          <h3>🔗 Agrupando com GROUP BY</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT cidade, COUNT(*) as total
+FROM clientes
+GROUP BY cidade;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Conta quantos clientes existem em cada cidade</div>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT cidade, COUNT(*) as total
+FROM clientes
+GROUP BY cidade
+HAVING total &gt; 5;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Mostra apenas cidades com mais de 5 clientes</div>
+          
+          <div class="tip-box">
+            <strong>💡 Diferença WHERE vs HAVING:</strong>
+            <ul style="margin-top:8px;">
+              <li><code>WHERE</code> — Filtra ANTES do agrupamento</li>
+              <li><code>HAVING</code> — Filtra DEPOIS do agrupamento</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 14: SQL INSERT -->
+      <div class="content-section">
+        <div class="card">
+          <h2>➕ SQL - INSERT (Inserir)</h2>
+          <p>O comando <code>INSERT</code> adiciona novos registros (linhas) em uma tabela.</p>
+          
+          <h3>📐 Sintaxe Básica</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>INSERT INTO tabela (coluna1, coluna2, ...)
+VALUES (valor1, valor2, ...);</code><span class="copy-icon">📋</span></div>
+          
+          <h3>📋 Exemplos Práticos</h3>
+          
+          <h4>🔹 Inserir um registro</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>INSERT INTO clientes (nome, email, cidade)
+VALUES ('João Silva', 'joao@email.com', 'São Paulo');</code><span class="copy-icon">📋</span></div>
+          
+          <h4>🔹 Inserir vários registros de uma vez</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>INSERT INTO clientes (nome, email, cidade)
+VALUES 
+    ('João Silva', 'joao@email.com', 'São Paulo'),
+    ('Maria Santos', 'maria@email.com', 'Rio de Janeiro'),
+    ('Pedro Costa', 'pedro@email.com', 'Belo Horizonte');</code><span class="copy-icon">📋</span></div>
+          
+          <h4>🔹 Inserir sem especificar colunas (todos os campos)</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>INSERT INTO clientes
+VALUES (NULL, 'Ana Oliveira', 'ana@email.com', 'Curitiba', 28);</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">⚠️ Cuidado: precisa seguir a ordem das colunas da tabela!</div>
+          
+          <h3>⚠️ Regras Importantes</h3>
+          <table class="comparison-table">
+            <tr><th>Regra</th><th>Exemplo</th></tr>
+            <tr><td>Textos entre aspas simples</td><td>'João', 'São Paulo'</td></tr>
+            <tr><td>Números sem aspas</td><td>25, 19.99</td></tr>
+            <tr><td>Datas no formato YYYY-MM-DD</td><td>'2024-01-15'</td></tr>
+            <tr><td>NULL para valores vazios</td><td>NULL</td></tr>
+            <tr><td>Respeitar NOT NULL</td><td>Campos obrigatórios devem ter valor</td></tr>
+            <tr><td>Respeitar UNIQUE</td><td>Não pode repetir valores únicos</td></tr>
+          </table>
+          
+          <h3>💻 INSERT com SELECT</h3>
+          <p>Você pode copiar dados de uma tabela para outra:</p>
+          <div class="command-box" onclick="copyCmd(this)"><code>INSERT INTO clientes_backup (nome, email)
+SELECT nome, email FROM clientes;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Copia todos os clientes para uma tabela de backup</div>
+          
+          <div class="warning-box">
+            <strong>⚠️ Cuidado:</strong> Antes de fazer INSERT em produção, teste sempre em ambiente de desenvolvimento!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 15: SQL UPDATE -->
+      <div class="content-section">
+        <div class="card">
+          <h2>✏️ SQL - UPDATE (Atualizar)</h2>
+          <p>O comando <code>UPDATE</code> modifica registros existentes em uma tabela.</p>
+          
+          <h3>📐 Sintaxe Básica</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>UPDATE tabela
+SET coluna1 = valor1, coluna2 = valor2
+WHERE condição;</code><span class="copy-icon">📋</span></div>
+          
+          <div class="warning-box">
+            <strong>⚠️ MUITO CUIDADO!</strong>
+            <p style="margin-top:10px;">Se você esquecer o <code>WHERE</code>, TODOS os registros serão atualizados! Isso pode ser desastroso!</p>
+          </div>
+          
+          <h3>📋 Exemplos Práticos</h3>
+          
+          <h4>🔹 Atualizar um registro específico</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>UPDATE clientes
+SET email = 'novo@email.com'
+WHERE id = 1;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Muda o email do cliente com id=1</div>
+          
+          <h4>🔹 Atualizar vários campos</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>UPDATE clientes
+SET nome = 'João Silva Jr.', cidade = 'Campinas'
+WHERE id = 1;</code><span class="copy-icon">📋</span></div>
+          
+          <h4>🔹 Atualizar vários registros</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>UPDATE produtos
+SET preco = preco * 1.10
+WHERE categoria = 'Eletrônicos';</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Aumenta em 10% o preço de todos os eletrônicos</div>
+          
+          <h4>🔹 Atualizar com base em outra tabela</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>UPDATE pedidos p
+JOIN clientes c ON p.id_cliente = c.id
+SET p.status = 'VIP'
+WHERE c.total_compras &gt; 1000;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Marca como VIP pedidos de clientes que compraram mais de 1000</div>
+          
+          <h3>🛡️ Boas Práticas</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">🔍</div>
+              <strong>Sempre use WHERE</strong>
+              Evite atualizar tudo sem querer
+            </div>
+            <div class="concept-item">
+              <div class="icon">🧪</div>
+              <strong>Teste com SELECT antes</strong>
+              Execute o WHERE como SELECT para ver o que será afetado
+            </div>
+            <div class="concept-item">
+              <div class="icon">💾</div>
+              <strong>Faça backup</strong>
+              Antes de UPDATEs em produção
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔢</div>
+              <strong>Use LIMIT</strong>
+              Para limitar quantos registros serão afetados
+            </div>
+          </div>
+          
+          <h3>💡 Técnica Segura</h3>
+          <p>Antes de fazer UPDATE, teste o WHERE com SELECT:</p>
+          <div class="command-box" onclick="copyCmd(this)"><code>-- 1. Teste primeiro:
+SELECT * FROM clientes WHERE cidade = 'São Paulo';
+
+-- 2. Se estiver correto, faça o UPDATE:
+UPDATE clientes SET status = 'SP' WHERE cidade = 'São Paulo';</code><span class="copy-icon">📋</span></div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 16: SQL DELETE -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🗑️ SQL - DELETE (Excluir)</h2>
+          <p>O comando <code>DELETE</code> remove registros de uma tabela.</p>
+          
+          <h3>📐 Sintaxe Básica</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>DELETE FROM tabela WHERE condição;</code><span class="copy-icon">📋</span></div>
+          
+          <div class="warning-box">
+            <strong>⚠️ EXTREMO CUIDADO!</strong>
+            <p style="margin-top:10px;">DELETE sem WHERE apaga TODOS os registros da tabela! A ação é irreversível (sem backup)!</p>
+          </div>
+          
+          <h3>📋 Exemplos Práticos</h3>
+          
+          <h4>🔹 Excluir um registro específico</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>DELETE FROM clientes WHERE id = 5;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Remove o cliente com id=5</div>
+          
+          <h4>🔹 Excluir vários registros</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>DELETE FROM pedidos WHERE status = 'cancelado';</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Remove todos os pedidos cancelados</div>
+          
+          <h4>🔹 Excluir com condição composta</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>DELETE FROM clientes 
+WHERE cidade = 'São Paulo' AND data_cadastro &lt; '2020-01-01';</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Remove clientes de SP cadastrados antes de 2020</div>
+          
+          <h4>🔹 Excluir todos os registros (CUIDADO!)</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>DELETE FROM clientes;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">⚠️ Apaga TODOS os clientes! Use com extrema cautela!</div>
+          
+          <h3>🆚 DELETE vs TRUNCATE</h3>
+          <table class="comparison-table">
+            <tr><th>Característica</th><th>DELETE</th><th>TRUNCATE</th></tr>
+            <tr><td>Velocidade</td><td>Mais lento</td><td>Muito mais rápido</td></tr>
+            <tr><td>Usa WHERE?</td><td>✅ Sim</td><td>❌ Não</td></tr>
+            <tr><td>Pode desfazer?</td><td>✅ Sim (com rollback)</td><td>❌ Não</td></tr>
+            <tr><td>Log de transação</td><td>Registro por registro</td><td>Desaloca páginas</td></tr>
+            <tr><td>Dispara triggers?</td><td>✅ Sim</td><td>❌ Não</td></tr>
+            <tr><td>Uso</td><td>Remoção seletiva</td><td>Limpar tabela inteira</td></tr>
+          </table>
+          
+          <div class="command-box" onclick="copyCmd(this)"><code>TRUNCATE TABLE clientes;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Remove todos os registros rapidamente (sem WHERE)</div>
+          
+          <h3>🛡️ Alternativa: Soft Delete</h3>
+          <p>Em vez de excluir, marque o registro como "inativo":</p>
+          <div class="command-box" onclick="copyCmd(this)"><code>-- Em vez de: DELETE FROM clientes WHERE id = 5;
+-- Use:
+UPDATE clientes SET ativo = FALSE WHERE id = 5;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Mantém o registro, mas marca como inativo (reversível!)</div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica profissional:</strong> Em sistemas reais, prefira <strong>soft delete</strong> (marcar como inativo) ao invés de excluir. Assim você pode recuperar dados se necessário!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 17: SQL JOIN -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🔗 SQL - JOIN (Juntar Tabelas)</h2>
+          <p>O <code>JOIN</code> combina dados de <strong>duas ou mais tabelas</strong> baseado em um relacionamento.</p>
+          
+          <h3>🎯 Por que usar JOIN?</h3>
+          <p>Em bancos normalizados, os dados estão em tabelas separadas. O JOIN permite consultá-los juntos!</p>
+          
+          <h3>📐 Sintaxe Básica</h3>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT colunas
+FROM tabela1
+JOIN tabela2 ON tabela1.coluna = tabela2.coluna;</code><span class="copy-icon">📋</span></div>
+          
+          <h3>📊 Tipos de JOIN</h3>
+          <div class="concept-grid">
+            <div class="concept-item">
+              <div class="icon">⚫</div>
+              <strong>INNER JOIN</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Retorna apenas registros que têm correspondência em AMBAS as tabelas</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🔵</div>
+              <strong>LEFT JOIN</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Retorna todos da tabela esquerda + correspondências da direita</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🟢</div>
+              <strong>RIGHT JOIN</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Retorna todos da tabela direita + correspondências da esquerda</p>
+            </div>
+            <div class="concept-item">
+              <div class="icon">🟡</div>
+              <strong>FULL JOIN</strong>
+              <p style="margin-top:8px; font-size:0.9em;">Retorna todos os registros de ambas as tabelas</p>
+            </div>
+          </div>
+          
+          <h3>📋 Exemplos Práticos</h3>
+          
+          <h4>🔹 INNER JOIN — Pedidos com dados do cliente</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT p.id_pedido, c.nome, p.valor_total
+FROM pedidos p
+INNER JOIN clientes c ON p.id_cliente = c.id;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Mostra apenas pedidos que têm cliente válido</div>
+          
+          <h4>🔹 LEFT JOIN — Todos os clientes, mesmo sem pedidos</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT c.nome, p.id_pedido, p.valor_total
+FROM clientes c
+LEFT JOIN pedidos p ON c.id = p.id_cliente;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Mostra todos os clientes, mesmo os que não têm pedidos (valor NULL)</div>
+          
+          <h4>🔹 JOIN com 3 tabelas</h4>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT c.nome, p.id_pedido, pr.nome as produto, ip.quantidade
+FROM clientes c
+JOIN pedidos p ON c.id = p.id_cliente
+JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
+JOIN produtos pr ON ip.id_produto = pr.id;</code><span class="copy-icon">📋</span></div>
+          <div class="command-explanation">Consulta completa: cliente, pedido, produto e quantidade</div>
+          
+          <h3>📊 Comparação Visual dos JOINs</h3>
+          <table class="comparison-table">
+            <tr><th>Tipo</th><th>Retorna</th><th>Quando usar</th></tr>
+            <tr>
+              <td><strong>INNER JOIN</strong></td>
+              <td>Só correspondências</td>
+              <td>Quando quer apenas registros relacionados</td>
+            </tr>
+            <tr>
+              <td><strong>LEFT JOIN</strong></td>
+              <td>Todos da esquerda + matches</td>
+              <td>Quando quer todos da tabela principal</td>
+            </tr>
+            <tr>
+              <td><strong>RIGHT JOIN</strong></td>
+              <td>Todos da direita + matches</td>
+              <td>Raramente usado (pode inverter e usar LEFT)</td>
+            </tr>
+            <tr>
+              <td><strong>FULL JOIN</strong></td>
+              <td>Todos de ambas</td>
+              <td>Quando quer tudo, independente de match</td>
+            </tr>
+          </table>
+          
+          <h3>💡 Apelidos (Aliases)</h3>
+          <p>Use apelidos para deixar o código mais limpo:</p>
+          <div class="command-box" onclick="copyCmd(this)"><code>SELECT c.nome AS cliente, p.valor AS total
+FROM clientes AS c
+JOIN pedidos AS p ON c.id = p.id_cliente;</code><span class="copy-icon">📋</span></div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica:</strong> Use aliases curtos (c, p, u) para facilitar a leitura. A maioria dos desenvolvedores usa a primeira letra da tabela!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 18: SIMULADOR SQL -->
+      <div class="content-section">
+        <div class="card">
+          <h2>💻 Simulador SQL Interativo</h2>
+          <p>Pratique comandos SQL diretamente aqui! Digite um comando ou clique nas sugestões abaixo.</p>
+          
+          <div class="sql-simulator">
+            <div class="sql-header">
+              <div class="sql-dot red"></div>
+              <div class="sql-dot yellow"></div>
+              <div class="sql-dot green"></div>
+              <div class="sql-title">MySQL Simulator — techsolutions_db</div>
+            </div>
+            <div class="sql-body" id="sqlBody">
+              <div class="sql-line"><span class="output">Bem-vindo ao Simulador SQL! 🗄️</span></div>
+              <div class="sql-line"><span class="output">Banco: techsolutions_db (clientes, produtos, pedidos)</span></div>
+              <div class="sql-line"><span class="output">────────────────────────────────────</span></div>
+            </div>
+            <div class="sql-input-line">
+              <span style="color:var(--accent-blue);">mysql&gt;</span>
+              <input type="text" class="sql-input" id="sqlInput" placeholder="Digite um comando SQL..." onkeypress="handleSqlInput(event)">
+            </div>
+            <div class="sql-suggestions">
+              <button class="suggestion-btn" onclick="runSql('SHOW TABLES')">SHOW TABLES</button>
+              <button class="suggestion-btn" onclick="runSql('SELECT * FROM clientes')">SELECT * FROM clientes</button>
+              <button class="suggestion-btn" onclick="runSql('SELECT * FROM produtos')">SELECT * FROM produtos</button>
+              <button class="suggestion-btn" onclick="runSql('SELECT * FROM pedidos')">SELECT * FROM pedidos</button>
+              <button class="suggestion-btn" onclick="runSql('DESCRIBE clientes')">DESCRIBE clientes</button>
+              <button class="suggestion-btn" onclick="runSql('SELECT COUNT(*) FROM clientes')">COUNT clientes</button>
+              <button class="suggestion-btn" onclick="runSql('SELECT nome FROM clientes WHERE cidade = &quot;São Paulo&quot;')">WHERE cidade</button>
+              <button class="suggestion-btn" onclick="runSql('clear')">clear</button>
+              <button class="suggestion-btn" onclick="runSql('help')">help</button>
+            </div>
+          </div>
+          
+          <div class="tip-box">
+            <strong>💡 Dica:</strong> Este é um simulador didático. Ele simula o comportamento do MySQL para você praticar os comandos!
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 19: FLASHCARDS -->
+      <div class="content-section">
+        <div class="card">
+          <h2>🎴 Flashcards para Memorização</h2>
+          <p>Clique nos cards para virar e ver a resposta! Ótimo para revisar antes da prova.</p>
+          
+          <div class="flashcards-container">
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🗄️</div>
+                  <h4>O que é SGBD?</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Sistema Gerenciador de Banco de Dados — software que organiza, armazena e recupera dados (ex: MySQL, PostgreSQL).</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🔑</div>
+                  <h4>Chave Primária (PK)</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Campo que identifica UNICAMENTE cada registro em uma tabela. Não pode ser NULL nem repetida.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🌐</div>
+                  <h4>Chave Estrangeira (FK)</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Campo que aponta para a PK de outra tabela, criando um relacionamento entre elas.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🔗</div>
+                  <h4>Diagrama ER</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Diagrama Entidade-Relacionamento — representação visual das entidades, atributos e relacionamentos do banco.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">1️⃣</div>
+                  <h4>1ª Forma Normal</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Todos os atributos devem ter valores atômicos (um valor por célula). Sem listas ou grupos repetidos.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">2️⃣</div>
+                  <h4>2ª Forma Normal</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Estar em 1FN + eliminar dependências parciais. Atributos devem depender da chave inteira.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">3️⃣</div>
+                  <h4>3ª Forma Normal</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Estar em 2FN + eliminar dependências transitivas. Atributos devem depender apenas da PK.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🔍</div>
+                  <h4>SELECT</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Comando SQL para CONSULTAR dados. Ex: SELECT nome FROM clientes WHERE cidade = 'SP';</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">➕</div>
+                  <h4>INSERT</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Comando SQL para INSERIR novos registros. Ex: INSERT INTO clientes (nome) VALUES ('João');</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">✏️</div>
+                  <h4>UPDATE</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Comando SQL para ATUALIZAR registros existentes. SEMPRE use WHERE para evitar atualizar tudo!</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🗑️</div>
+                  <h4>DELETE</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Comando SQL para EXCLUIR registros. SEMPRE use WHERE! Sem WHERE apaga TODOS os registros!</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flashcard" onclick="this.classList.toggle('flipped')">
+              <div class="flashcard-inner">
+                <div class="flashcard-front">
+                  <div class="emoji">🔗</div>
+                  <h4>JOIN</h4>
+                  <p>Clique para ver</p>
+                </div>
+                <div class="flashcard-back">
+                  <p>Comando SQL para COMBINAR dados de várias tabelas baseado em relacionamentos.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 20: GLOSSÁRIO -->
+      <div class="content-section">
+        <div class="card">
+          <h2>📖 Glossário de Termos</h2>
+          <p>Pesquise qualquer termo para entender seu significado.</p>
+          
+          <input type="text" class="glossary-search" id="glossarySearch" placeholder="🔍 Buscar termo..." onkeyup="filterGlossary(this.value)">
+          
+          <div id="glossaryList">
+            <div class="glossary-item" data-term="sgbd">
+              <div class="term">SGBD</div>
+              <div class="definition">Sistema Gerenciador de Banco de Dados — software que gerencia o armazenamento e recuperação de dados.</div>
+            </div>
+            <div class="glossary-item" data-term="tabela">
+              <div class="term">Tabela</div>
+              <div class="definition">Estrutura básica de um banco relacional, composta por linhas (registros) e colunas (campos).</div>
+            </div>
+            <div class="glossary-item" data-term="registro">
+              <div class="term">Registro (Tupla)</div>
+              <div class="definition">Uma linha da tabela, representando uma instância completa da entidade.</div>
+            </div>
+            <div class="glossary-item" data-term="campo">
+              <div class="term">Campo (Atributo/Coluna)</div>
+              <div class="definition">Uma característica da entidade. Define o tipo de dado armazenado.</div>
+            </div>
+            <div class="glossary-item" data-term="entidade">
+              <div class="term">Entidade</div>
+              <div class="definition">Objeto do mundo real representado no banco de dados (cliente, produto, pedido).</div>
+            </div>
+            <div class="glossary-item" data-term="atributo">
+              <div class="term">Atributo</div>
+              <div class="definition">Característica ou propriedade de uma entidade (nome, email, preço).</div>
+            </div>
+            <div class="glossary-item" data-term="relacionamento">
+              <div class="term">Relacionamento</div>
+              <div class="definition">Associação entre duas ou mais entidades (1:1, 1:N, N:M).</div>
+            </div>
+            <div class="glossary-item" data-term="cardinalidade">
+              <div class="term">Cardinalidade</div>
+              <div class="definition">Número de instâncias de uma entidade que podem se relacionar com outra (1:1, 1:N, N:M).</div>
+            </div>
+            <div class="glossary-item" data-term="chave primária">
+              <div class="term">Chave Primária (PK)</div>
+              <div class="definition">Campo que identifica unicamente cada registro. Não pode ser NULL nem repetida.</div>
+            </div>
+            <div class="glossary-item" data-term="chave estrangeira">
+              <div class="term">Chave Estrangeira (FK)</div>
+              <div class="definition">Campo que referencia a PK de outra tabela, criando um relacionamento.</div>
+            </div>
+            <div class="glossary-item" data-term="integridade referencial">
+              <div class="term">Integridade Referencial</div>
+              <div class="definition">Garantia de que toda FK aponta para um registro existente, evitando dados órfãos.</div>
+            </div>
+            <div class="glossary-item" data-term="normalização">
+              <div class="term">Normalização</div>
+              <div class="definition">Processo de organizar dados para eliminar redundâncias e inconsistências.</div>
+            </div>
+            <div class="glossary-item" data-term="1fn">
+              <div class="term">1ª Forma Normal (1FN)</div>
+              <div class="definition">Regra que exige valores atômicos — um valor por célula, sem listas ou grupos repetidos.</div>
+            </div>
+            <div class="glossary-item" data-term="2fn">
+              <div class="term">2ª Forma Normal (2FN)</div>
+              <div class="definition">Estar em 1FN + eliminar dependências parciais (atributos dependem da chave inteira).</div>
+            </div>
+            <div class="glossary-item" data-term="3fn">
+              <div class="term">3ª Forma Normal (3FN)</div>
+              <div class="definition">Estar em 2FN + eliminar dependências transitivas (atributos dependem apenas da PK).</div>
+            </div>
+            <div class="glossary-item" data-term="sql">
+              <div class="term">SQL</div>
+              <div class="definition">Structured Query Language — linguagem padrão para consultar e manipular bancos relacionais.</div>
+            </div>
+            <div class="glossary-item" data-term="select">
+              <div class="term">SELECT</div>
+              <div class="definition">Comando SQL para consultar dados. Retorna registros de uma ou mais tabelas.</div>
+            </div>
+            <div class="glossary-item" data-term="insert">
+              <div class="term">INSERT</div>
+              <div class="definition">Comando SQL para inserir novos registros em uma tabela.</div>
+            </div>
+            <div class="glossary-item" data-term="update">
+              <div class="term">UPDATE</div>
+              <div class="definition">Comando SQL para modificar registros existentes. Use WHERE com cuidado!</div>
+            </div>
+            <div class="glossary-item" data-term="delete">
+              <div class="term">DELETE</div>
+              <div class="definition">Comando SQL para excluir registros. SEMPRE use WHERE para evitar apagar tudo!</div>
+            </div>
+            <div class="glossary-item" data-term="join">
+              <div class="term">JOIN</div>
+              <div class="definition">Comando SQL para combinar dados de várias tabelas baseado em relacionamentos.</div>
+            </div>
+            <div class="glossary-item" data-term="where">
+              <div class="term">WHERE</div>
+              <div class="definition">Cláusula SQL para filtrar registros com base em condições.</div>
+            </div>
+            <div class="glossary-item" data-term="crud">
+              <div class="term">CRUD</div>
+              <div class="definition">Create, Read, Update, Delete — as 4 operações básicas em banco de dados.</div>
+            </div>
+            <div class="glossary-item" data-term="mysql">
+              <div class="term">MySQL</div>
+              <div class="definition">SGBD relacional open-source muito popular, especialmente em aplicações web.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 21: CHEATSHEET -->
+      <div class="content-section">
+        <div class="card">
+          <h2>⚡ Cheatsheet SQL Completo</h2>
+          <p>Todos os comandos essenciais em um só lugar. Salve esta página!</p>
+          
+          <h3>🔍 Consultas (SELECT)</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM tabela;</div>
+              <div class="desc">Seleciona tudo</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT col1, col2 FROM tabela;</div>
+              <div class="desc">Colunas específicas</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM tabela WHERE condição;</div>
+              <div class="desc">Com filtro</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM tabela ORDER BY col ASC;</div>
+              <div class="desc">Ordenar crescente</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM tabela ORDER BY col DESC;</div>
+              <div class="desc">Ordenar decrescente</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM tabela LIMIT 10;</div>
+              <div class="desc">Limitar resultados</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT DISTINCT col FROM tabela;</div>
+              <div class="desc">Valores únicos</div>
+            </div>
+          </div>
+          
+          <h3>➕ Inserção (INSERT)</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">INSERT INTO tabela (col1, col2) VALUES (val1, val2);</div>
+              <div class="desc">Inserir um registro</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">INSERT INTO tabela VALUES (NULL, 'nome', 'email');</div>
+              <div class="desc">Inserir todos os campos</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">INSERT INTO t1 (c1) SELECT c1 FROM t2;</div>
+              <div class="desc">Inserir de outra tabela</div>
+            </div>
+          </div>
+          
+          <h3>✏️ Atualização (UPDATE)</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">UPDATE tabela SET col = valor WHERE id = 1;</div>
+              <div class="desc">Atualizar específico</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">UPDATE tabela SET c1 = v1, c2 = v2 WHERE condição;</div>
+              <div class="desc">Vários campos</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">UPDATE t1 JOIN t2 ON t1.id = t2.id SET t1.col = t2.col;</div>
+              <div class="desc">Com JOIN</div>
+            </div>
+          </div>
+          
+          <h3>🗑️ Exclusão (DELETE)</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">DELETE FROM tabela WHERE id = 1;</div>
+              <div class="desc">Excluir específico</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">DELETE FROM tabela WHERE condição;</div>
+              <div class="desc">Excluir com filtro</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">TRUNCATE TABLE tabela;</div>
+              <div class="desc">Limpar tudo (rápido)</div>
+            </div>
+          </div>
+          
+          <h3>🔗 Junção (JOIN)</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id;</div>
+              <div class="desc">Apenas correspondências</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id;</div>
+              <div class="desc">Todos da esquerda</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id;</div>
+              <div class="desc">Todos da direita</div>
+            </div>
+          </div>
+          
+          <h3>📊 Agregação</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT COUNT(*) FROM tabela;</div>
+              <div class="desc">Contar registros</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT SUM(coluna) FROM tabela;</div>
+              <div class="desc">Somar valores</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT AVG(coluna) FROM tabela;</div>
+              <div class="desc">Média</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT MAX(coluna), MIN(coluna) FROM tabela;</div>
+              <div class="desc">Maior e menor</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT col, COUNT(*) FROM t GROUP BY col;</div>
+              <div class="desc">Agrupar</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SELECT col, COUNT(*) FROM t GROUP BY col HAVING COUNT(*) &gt; 5;</div>
+              <div class="desc">Filtrar grupos</div>
+            </div>
+          </div>
+          
+          <h3>🏗️ Estrutura</h3>
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <div class="cmd">CREATE TABLE tabela (id INT PRIMARY KEY, nome VARCHAR(100));</div>
+              <div class="desc">Criar tabela</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">ALTER TABLE tabela ADD coluna INT;</div>
+              <div class="desc">Adicionar coluna</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">ALTER TABLE tabela DROP COLUMN coluna;</div>
+              <div class="desc">Remover coluna</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">DROP TABLE tabela;</div>
+              <div class="desc">Excluir tabela</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">SHOW TABLES;</div>
+              <div class="desc">Listar tabelas</div>
+            </div>
+            <div class="cheatsheet-item">
+              <div class="cmd">DESCRIBE tabela;</div>
+              <div class="desc">Ver estrutura</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SEÇÃO 22: QUIZ -->
+      <div class="content-section">
+        <div class="quiz-container">
+          <h2 style="text-align:center; color:var(--accent-blue); margin-bottom:20px;">🎯 Quiz Completo</h2>
+          <p style="text-align:center; margin-bottom:25px;">Teste seus conhecimentos em todas as áreas!</p>
+          
+          <div class="quiz-tabs">
+            <div class="quiz-tab active" onclick="showQuizCategory(0, this)">🗄️ SGBD (5)</div>
+            <div class="quiz-tab" onclick="showQuizCategory(1, this)">🔑 Chaves (5)</div>
+            <div class="quiz-tab" onclick="showQuizCategory(2, this)">📐 Normalização (5)</div>
+            <div class="quiz-tab" onclick="showQuizCategory(3, this)">💾 SQL (5)</div>
+            <div class="quiz-tab" onclick="showQuizCategory(4, this)">✍️ Dissertativas (2)</div>
+          </div>
+          
+          <!-- QUIZ SGBD -->
+          <div class="quiz-category active" id="quizCat0">
+            <div class="question" data-correct="1">
+              <h4>1. O que é um SGBD relacional?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Um editor de código</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Um sistema que organiza dados em tabelas relacionadas</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Uma linguagem de programação</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Um sistema operacional</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="2">
+              <h4>2. Qual das alternativas é um SGBD relacional?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Photoshop</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Excel</div>
+                <div class="option" onclick="checkAnswer(this, 2)">MySQL</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Windows</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="0">
+              <h4>3. Em um banco relacional, os dados são organizados em:</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Tabelas</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Arquivos de texto</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Pastas</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Imagens</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="3">
+              <h4>4. O que representa uma linha em uma tabela?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Uma coluna</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Um atributo</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Um campo</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Um registro (tupla)</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="1">
+              <h4>5. Qual o principal benefício de usar SGBDs relacionais?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Criar interfaces gráficas</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Garantir integridade e consistência dos dados</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Executar programas</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Editar imagens</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+          </div>
+          
+          <!-- QUIZ CHAVES -->
+          <div class="quiz-category" id="quizCat1">
+            <div class="question" data-correct="2">
+              <h4>1. O que é uma chave primária?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Um campo opcional</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Um campo que pode ser NULL</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Um campo que identifica unicamente cada registro</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Um campo de texto qualquer</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="1">
+              <h4>2. O que é uma chave estrangeira?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Uma chave de outro país</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Um campo que referencia a PK de outra tabela</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Uma senha de acesso</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Um tipo de dado</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="3">
+              <h4>3. O que é integridade referencial?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Um tipo de backup</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Uma forma de criptografia</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Um comando SQL</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Garantia de que toda FK aponta para um registro existente</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="0">
+              <h4>4. Qual comando cria uma chave estrangeira?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">FOREIGN KEY (col) REFERENCES tabela(id)</div>
+                <div class="option" onclick="checkAnswer(this, 1)">PRIMARY KEY (col)</div>
+                <div class="option" onclick="checkAnswer(this, 2)">UNIQUE (col)</div>
+                <div class="option" onclick="checkAnswer(this, 3)">NOT NULL (col)</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="2">
+              <h4>5. O que acontece com ON DELETE CASCADE?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Bloqueia a exclusão</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Coloca NULL na FK</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Exclui também os registros relacionados</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Nada acontece</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+          </div>
+          
+          <!-- QUIZ NORMALIZAÇÃO -->
+          <div class="quiz-category" id="quizCat2">
+            <div class="question" data-correct="1">
+              <h4>1. O que a 1ª Forma Normal exige?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Chaves primárias</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Valores atômicos (um valor por célula)</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Sem dependências transitivas</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Tabelas relacionadas</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="2">
+              <h4>2. O que a 2ª Forma Normal elimina?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Valores NULL</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Dependências transitivas</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Dependências parciais</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Chaves estrangeiras</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="0">
+              <h4>3. O que a 3ª Forma Normal elimina?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Dependências transitivas</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Dependências parciais</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Valores repetidos</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Chaves primárias</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="3">
+              <h4>4. Qual o principal objetivo da normalização?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">Aumentar o tamanho do banco</div>
+                <div class="option" onclick="checkAnswer(this, 1)">Criar mais tabelas</div>
+                <div class="option" onclick="checkAnswer(this, 2)">Dificultar consultas</div>
+                <div class="option" onclick="checkAnswer(this, 3)">Eliminar redundâncias e inconsistências</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="1">
+              <h4>5. Qual forma normal é suficiente para a maioria dos sistemas?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">1FN</div>
+                <div class="option" onclick="checkAnswer(this, 1)">3FN</div>
+                <div class="option" onclick="checkAnswer(this, 2)">FNBC</div>
+                <div class="option" onclick="checkAnswer(this, 3)">4FN</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+          </div>
+          
+          <!-- QUIZ SQL -->
+          <div class="quiz-category" id="quizCat3">
+            <div class="question" data-correct="2">
+              <h4>1. Qual comando SQL consulta dados?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">INSERT</div>
+                <div class="option" onclick="checkAnswer(this, 1)">UPDATE</div>
+                <div class="option" onclick="checkAnswer(this, 2)">SELECT</div>
+                <div class="option" onclick="checkAnswer(this, 3)">DELETE</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="1">
+              <h4>2. Qual comando insere novos registros?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">SELECT</div>
+                <div class="option" onclick="checkAnswer(this, 1)">INSERT</div>
+                <div class="option" onclick="checkAnswer(this, 2)">UPDATE</div>
+                <div class="option" onclick="checkAnswer(this, 3)">DELETE</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="0">
+              <h4>3. Qual cláusula filtra registros?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">WHERE</div>
+                <div class="option" onclick="checkAnswer(this, 1)">ORDER BY</div>
+                <div class="option" onclick="checkAnswer(this, 2)">GROUP BY</div>
+                <div class="option" onclick="checkAnswer(this, 3)">HAVING</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="3">
+              <h4>4. Qual comando combina dados de várias tabelas?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">WHERE</div>
+                <div class="option" onclick="checkAnswer(this, 1)">ORDER BY</div>
+                <div class="option" onclick="checkAnswer(this, 2)">GROUP BY</div>
+                <div class="option" onclick="checkAnswer(this, 3)">JOIN</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+            
+            <div class="question" data-correct="2">
+              <h4>5. Qual função conta registros?</h4>
+              <div class="options">
+                <div class="option" onclick="checkAnswer(this, 0)">SUM()</div>
+                <div class="option" onclick="checkAnswer(this, 1)">AVG()</div>
+                <div class="option" onclick="checkAnswer(this, 2)">COUNT()</div>
+                <div class="option" onclick="checkAnswer(this, 3)">MAX()</div>
+              </div>
+              <div class="feedback"></div>
+            </div>
+          </div>
+          
+          <!-- DISSERTATIVAS -->
+          <div class="quiz-category" id="quizCat4">
+            <div class="question">
+              <h4>1. (Dissertativa) Explique o que é normalização e por que é importante em um banco de dados.</h4>
+              <div class="essay-box">
+                <textarea placeholder="Digite sua resposta aqui..."></textarea>
+                <button class="show-answer" onclick="toggleAnswer(this)">💡 Ver resposta sugerida</button>
+                <div class="answer-content">
+                  <strong>Resposta sugerida:</strong> Normalização é o processo de organizar os dados em um banco de dados relacional para reduzir redundâncias e evitar inconsistências. É importante porque: (1) elimina dados repetidos, economizando espaço; (2) evita anomalias de inserção, atualização e exclusão; (3) garante consistência dos dados; (4) facilita a manutenção; (5) melhora o desempenho das consultas. As formas normais (1FN, 2FN, 3FN) são regras progressivas que ajudam a estruturar o banco de forma eficiente.
+                </div>
+              </div>
+            </div>
+            
+            <div class="question">
+              <h4>2. (Dissertativa) Explique a diferença entre chave primária e chave estrangeira, dando exemplos.</h4>
+              <div class="essay-box">
+                <textarea placeholder="Digite sua resposta aqui..."></textarea>
+                <button class="show-answer" onclick="toggleAnswer(this)">💡 Ver resposta sugerida</button>
+                <div class="answer-content">
+                  <strong>Resposta sugerida:</strong> A <strong>chave primária (PK)</strong> é um campo que identifica UNICAMENTE cada registro em uma tabela. Ela não pode ser NULL nem repetida. Exemplo: na tabela CLIENTES, o campo "id_cliente" é a PK. Já a <strong>chave estrangeira (FK)</strong> é um campo que referencia a PK de outra tabela, criando um relacionamento entre elas. Exemplo: na tabela PEDIDOS, o campo "id_cliente" é uma FK que aponta para a PK da tabela CLIENTES. A PK garante unicidade dentro da tabela, enquanto a FK garante integridade referencial entre tabelas.
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="score-box" id="scoreBox" style="display:none;">
+            <h3 id="scoreText">0/20</h3>
+            <p id="scoreMessage"></p>
+            <button class="btn" onclick="resetQuiz()">🔄 Refazer Quiz</button>
+          </div>
+        </div>
+      </div>
+      
+    </main>
+  </div>
+  
+</div>
+
+<script>
+  let visitedSections = new Set([0]);
+  let correctAnswers = 0;
+  let totalAnswered = 0;
+  let commandsCopied = 0;
+  let startTime = Date.now();
+  let badges = { first: false, explorer: false, commander: false, master: false };
+  
+  // SIMULADOR SQL STATE
+  let sqlState = {
+    tables: {
+      clientes: [
+        { id: 1, nome: 'João Silva', email: 'joao@email.com', cidade: 'São Paulo', idade: 25 },
+        { id: 2, nome: 'Maria Santos', email: 'maria@email.com', cidade: 'Rio de Janeiro', idade: 32 },
+        { id: 3, nome: 'Pedro Costa', email: 'pedro@email.com', cidade: 'São Paulo', idade: 28 },
+        { id: 4, nome: 'Ana Oliveira', email: 'ana@email.com', cidade: 'Belo Horizonte', idade: 22 },
+        { id: 5, nome: 'Carlos Souza', email: 'carlos@email.com', cidade: 'São Paulo', idade: 35 }
+      ],
+      produtos: [
+        { id: 1, nome: 'Notebook', preco: 3000, estoque: 10 },
+        { id: 2, nome: 'Mouse', preco: 50, estoque: 100 },
+        { id: 3, nome: 'Teclado', preco: 150, estoque: 50 },
+        { id: 4, nome: 'Monitor', preco: 800, estoque: 20 }
+      ],
+      pedidos: [
+        { id: 1, id_cliente: 1, valor: 3000, data: '2024-01-15' },
+        { id: 2, id_cliente: 2, valor: 200, data: '2024-01-16' },
+        { id: 3, id_cliente: 1, valor: 150, data: '2024-01-17' }
+      ]
+    }
+  };
+  
+  function showSection(index, element) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.content-section')[index].classList.add('active');
+    if (element) element.classList.add('active');
+    
+    visitedSections.add(index);
+    updateProgress();
+    checkBadges();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  function updateProgress() {
+    const total = 23;
+    const percent = Math.round((visitedSections.size / total) * 100);
+    document.getElementById('progressFill').style.width = percent + '%';
+    document.getElementById('progressText').textContent = percent + '%';
+    document.getElementById('sectionsVisited').textContent = visitedSections.size;
+  }
+  
+  function toggleTheme() {
+    document.body.classList.toggle('light-mode');
+  }
+  
+  function toggleAccordion(header) {
+    const item = header.parentElement;
+    item.classList.toggle('active');
+  }
+  
+  function copyCmd(element) {
+    const code = element.querySelector('code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      element.classList.add('copied');
+      const icon = element.querySelector('.copy-icon');
+      if (icon) icon.textContent = '✅';
+      commandsCopied++;
+      document.getElementById('statCommands').textContent = commandsCopied;
+      checkBadges();
+      setTimeout(() => {
+        element.classList.remove('copied');
+        if (icon) icon.textContent = '📋';
+      }, 1500);
+    });
+  }
+  
+  // SQL SIMULATOR
+  function handleSqlInput(event) {
+    if (event.key === 'Enter') {
+      const input = document.getElementById('sqlInput');
+      const command = input.value.trim();
+      if (command) {
+        runSql(command);
+        input.value = '';
+      }
+    }
+  }
+  
+  function runSql(command) {
+    const body = document.getElementById('sqlBody');
+    
+    const cmdLine = document.createElement('div');
+    cmdLine.className = 'sql-line';
+    cmdLine.innerHTML = `<span class="prompt">mysql&gt; </span><span>${command}</span>`;
+    body.appendChild(cmdLine);
+    
+    let output = processSql(command);
+    
+    if (output) {
+      const outLine = document.createElement('div');
+      outLine.className = 'sql-line';
+      outLine.innerHTML = output;
+      body.appendChild(outLine);
+    }
+    
+    body.scrollTop = body.scrollHeight;
+  }
+  
+  function processSql(cmd) {
+    cmd = cmd.trim();
+    const cmdUpper = cmd.toUpperCase();
+    
+    if (cmdUpper === 'HELP') {
+      return '<span class="output">Comandos: SHOW TABLES, SELECT, DESCRIBE, COUNT, WHERE, clear</span>';
+    }
+    
+    if (cmdUpper === 'CLEAR') {
+      document.getElementById('sqlBody').innerHTML = '';
+      return null;
+    }
+    
+    if (cmdUpper === 'SHOW TABLES') {
+      return '<span class="output">+------------------+<br>| Tables           |<br>+------------------+<br>| clientes         |<br>| produtos         |<br>| pedidos          |<br>+------------------+<br>3 rows in set</span>';
+    }
+    
+    if (cmdUpper.startsWith('DESCRIBE ') || cmdUpper.startsWith('DESC ')) {
+      const table = cmd.split(' ')[1].toLowerCase();
+      if (sqlState.tables[table]) {
+        const cols = Object.keys(sqlState.tables[table][0]);
+        let out = '<span class="output">+----------+-------------+------+-----+---------+-------+<br>| Field    | Type        | Null | Key | Default | Extra |<br>+----------+-------------+------+-----+---------+-------+<br>';
+        cols.forEach((col, i) => {
+          const type = i === 0 ? 'int' : 'varchar(100)';
+          const key = i === 0 ? 'PRI' : '';
+          out += `| ${col.padEnd(8)} | ${type.padEnd(11)} | NO   | ${key.padEnd(3)} | NULL    |       |<br>`;
+        });
+        out += '+----------+-------------+------+-----+---------+-------+</span>';
+        return out;
+      }
+      return '<span class="error">ERROR 1146: Table doesn\'t exist</span>';
+    }
+    
+    if (cmdUpper.startsWith('SELECT * FROM')) {
+      const table = cmd.split(' ').pop().toLowerCase();
+      if (sqlState.tables[table]) {
+        const data = sqlState.tables[table];
+        const cols = Object.keys(data[0]);
+        let out = '<span class="output">+' + cols.map(c => '-'.repeat(c.length + 2)).join('+') + '+<br>';
+        out += '|' + cols.map(c => ' ' + c + ' ').join('|') + '|<br>';
+        out += '+' + cols.map(c => '-'.repeat(c.length + 2)).join('+') + '+<br>';
+        data.forEach(row => {
+          out += '|' + cols.map(c => ' ' + String(row[c]).padEnd(c.length) + ' ').join('|') + '|<br>';
+        });
+        out += '+' + cols.map(c => '-'.repeat(c.length + 2)).join('+') + '+<br>';
+        out += `${data.length} rows in set</span>`;
+        return out;
+      }
+      return '<span class="error">ERROR 1146: Table doesn\'t exist</span>';
+    }
+    
+    if (cmdUpper.includes('SELECT') && cmdUpper.includes('COUNT')) {
+      const match = cmd.match(/FROM\s+(\w+)/i);
+      if (match) {
+        const table = match[1].toLowerCase();
+        if (sqlState.tables[table]) {
+          return `<span class="output">+----------+<br>| COUNT(*) |<br>+----------+<br>| ${sqlState.tables[table].length.toString().padEnd(8)} |<br>+----------+<br>1 row in set</span>`;
+        }
+      }
+      return '<span class="error">ERROR 1146: Table doesn\'t exist</span>';
+    }
+    
+    if (cmdUpper.includes('SELECT') && cmdUpper.includes('WHERE')) {
+      const tableMatch = cmd.match(/FROM\s+(\w+)/i);
+      const whereMatch = cmd.match(/WHERE\s+(.+?)(?:ORDER|LIMIT|$)/i);
+      
+      if (tableMatch && whereMatch) {
+        const table = tableMatch[1].toLowerCase();
+        if (sqlState.tables[table]) {
+          let data = sqlState.tables[table];
+          const whereClause = whereMatch[1].trim();
+          
+          // Simple WHERE parsing
+          const eqMatch = whereClause.match(/(\w+)\s*=\s*["']?([^"']+)["']?/);
+          if (eqMatch) {
+            const col = eqMatch[1];
+            const val = eqMatch[2];
+            data = data.filter(row => String(row[col]) === val);
+          }
+          
+          if (data.length > 0) {
+            const cols = Object.keys(data[0]);
+            let out = '<span class="output">+' + cols.map(c => '-'.repeat(c.length + 2)).join('+') + '+<br>';
+            out += '|' + cols.map(c => ' ' + c + ' ').join('|') + '|<br>';
+            out += '+' + cols.map(c => '-'.repeat(c.length + 2)).join('+') + '+<br>';
+            data.forEach(row => {
+              out += '|' + cols.map(c => ' ' + String(row[c]).padEnd(c.length) + ' ').join('|') + '|<br>';
+            });
+            out += '+' + cols.map(c => '-'.repeat(c.length + 2)).join('+') + '+<br>';
+            out += `${data.length} rows in set</span>`;
+            return out;
+          }
+          return '<span class="output">Empty set (0.00 sec)</span>';
+        }
+      }
+      return '<span class="error">ERROR 1064: Syntax error</span>';
+    }
+    
+    if (cmdUpper.startsWith('SELECT') && !cmdUpper.includes('FROM')) {
+      return '<span class="error">ERROR 1064: Use SELECT ... FROM tabela</span>';
+    }
+    
+    return '<span class="error">ERROR 1064: Comando não reconhecido. Digite "help" para ver os comandos.</span>';
+  }
+  
+  // QUIZ
+  function showQuizCategory(index, tab) {
+    document.querySelectorAll('.quiz-category').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.quiz-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('quizCat' + index).classList.add('active');
+    tab.classList.add('active');
+  }
+  
+  function checkAnswer(optionElement, selectedIndex) {
+    const question = optionElement.closest('.question');
+    if (question.classList.contains('answered')) return;
+    
+    const correctIndex = parseInt(question.dataset.correct);
+    const feedback = question.querySelector('.feedback');
+    const options = question.querySelectorAll('.option');
+    
+    question.classList.add('answered');
+    totalAnswered++;
+    
+    if (selectedIndex === correctIndex) {
+      optionElement.classList.add('correct');
+      feedback.textContent = '✅ Correto! Excelente!';
+      feedback.className = 'feedback show success';
+      correctAnswers++;
+    } else {
+      optionElement.classList.add('wrong');
+      options[correctIndex].classList.add('correct');
+      feedback.textContent = '❌ Incorreto. A resposta certa está destacada em verde.';
+      feedback.className = 'feedback show error';
+    }
+    
+    options.forEach(o => o.style.pointerEvents = 'none');
+    document.getElementById('statQuiz').textContent = correctAnswers;
+    
+    const allQuestions = document.querySelectorAll('.question[data-correct]');
+    const answeredQuestions = document.querySelectorAll('.question.answered');
+    
+    if (allQuestions.length === answeredQuestions.length) {
+      showScore();
+    }
+    
+    checkBadges();
+  }
+  
+  function showScore() {
+    setTimeout(() => {
+      const scoreBox = document.getElementById('scoreBox');
+      const scoreText = document.getElementById('scoreText');
+      const scoreMessage = document.getElementById('scoreMessage');
+      
+      scoreText.textContent = `${correctAnswers}/${totalAnswered}`;
+      
+      let message = '';
+      const percent = totalAnswered > 0 ? (correctAnswers / totalAnswered) * 100 : 0;
+      if (percent === 100) message = '🏆 Perfeito! Você é um DBA master!';
+      else if (percent >= 80) message = '🎉 Muito bom! Quase lá!';
+      else if (percent >= 60) message = '👍 Bom trabalho! Revise os pontos fracos.';
+      else if (percent >= 40) message = '📚 Continue estudando!';
+      else message = '💪 Não desista! Revise o conteúdo e tente novamente.';
+      
+      scoreMessage.textContent = message;
+      scoreBox.style.display = 'block';
+      scoreBox.scrollIntoView({ behavior: 'smooth' });
+    }, 500);
+  }
+  
+  function resetQuiz() {
+    correctAnswers = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(q => {
+      q.classList.remove('answered');
+      q.querySelectorAll('.option').forEach(o => {
+        o.classList.remove('correct', 'wrong');
+        o.style.pointerEvents = 'auto';
+      });
+      const feedback = q.querySelector('.feedback');
+      if (feedback) feedback.className = 'feedback';
+    });
+    document.getElementById('scoreBox').style.display = 'none';
+    document.getElementById('statQuiz').textContent = 0;
+  }
+  
+  function toggleAnswer(button) {
+    const answerContent = button.nextElementSibling;
+    answerContent.classList.toggle('show');
+    button.textContent = answerContent.classList.contains('show') ? '🙈 Ocultar resposta' : '💡 Ver resposta sugerida';
+  }
+  
+  function filterGlossary(query) {
+    query = query.toLowerCase();
+    document.querySelectorAll('.glossary-item').forEach(item => {
+      const term = item.dataset.term;
+      const termText = item.querySelector('.term').textContent.toLowerCase();
+      const def = item.querySelector('.definition').textContent.toLowerCase();
+      if (term.includes(query) || termText.includes(query) || def.includes(query)) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  function checkBadges() {
+    if (visitedSections.size >= 1 && !badges.first) {
+      badges.first = true;
+      document.getElementById('badge-first').classList.add('earned');
+    }
+    
+    if (visitedSections.size >= 12 && !badges.explorer) {
+      badges.explorer = true;
+      document.getElementById('badge-explorer').classList.add('earned');
+    }
+    
+    if (commandsCopied >= 10 && !badges.commander) {
+      badges.commander = true;
+      document.getElementById('badge-commander').classList.add('earned');
+    }
+    
+    const totalQuestions = document.querySelectorAll('.question[data-correct]').length;
+    if (correctAnswers === totalQuestions && totalQuestions > 0 && !badges.master) {
+      badges.master = true;
+      document.getElementById('badge-master').classList.add('earned');
+    }
+    
+    const earned = Object.values(badges).filter(b => b).length;
+    document.getElementById('statBadges').textContent = earned;
+  }
+  
+  function exportProgress() {
+    const elapsed = Math.floor((Date.now() - startTime) / 60000);
+    document.getElementById('statTime').textContent = elapsed;
+    alert(`📊 Seu Progresso:\n\n📚 Seções visitadas: ${visitedSections.size}/23\n⌨️ Comandos copiados: ${commandsCopied}\n✅ Questões corretas: ${correctAnswers}\n🏆 Conquistas: ${Object.values(badges).filter(b => b).length}/4\n⏱️ Tempo estudando: ${elapsed} minutos`);
+  }
+  
+  updateProgress();
+  checkBadges();
+  
+  setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 60000);
+    document.getElementById('statTime').textContent = elapsed;
+  }, 60000);
+</script>
+</body>
+</html>
